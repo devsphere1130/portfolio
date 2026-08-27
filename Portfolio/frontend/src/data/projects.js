@@ -1,0 +1,32 @@
+export const projectsData = [
+  {
+    id: 1,
+    title: 'FinFlow Banking Platform',
+    category: 'FinTech',
+    problem: 'Complex financial workflows needed automation and real-time processing',
+    description: 'Full-stack banking platform with real-time transaction processing, multi-currency support, and comprehensive reporting dashboards.',
+    technologies: ['React', 'Django REST', 'PostgreSQL', 'Redis', 'Celery'],
+    image: 'https://images.unsplash.com/photo-1557821552-17105176677c?w=1200&h=600&fit=crop',
+    caseStudyUrl: '/work/finflow',
+  },
+  {
+    id: 2,
+    title: 'OrderSync SaaS Management',
+    category: 'SaaS Platform',
+    problem: 'E-commerce businesses struggled with multi-channel order management',
+    description: 'SaaS platform for managing orders across 15+ sales channels with automated fulfillment, inventory sync, and advanced analytics.',
+    technologies: ['React', 'Django', 'REST API', 'PostgreSQL', 'Docker'],
+    image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop',
+    caseStudyUrl: '/work/ordersync',
+  },
+  {
+    id: 3,
+    title: 'BuildFlow Project Management',
+    category: 'Enterprise Application',
+    problem: 'Construction teams needed centralized project visibility and collaboration',
+    description: 'Enterprise project management system with real-time collaboration, resource scheduling, and integrated document management for construction firms.',
+    technologies: ['React', 'Django', 'PostgreSQL', 'WebSockets', 'Cloud'],
+    image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop',
+    caseStudyUrl: '/work/buildflow',
+  },
+];
