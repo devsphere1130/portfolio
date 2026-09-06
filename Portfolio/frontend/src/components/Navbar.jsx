@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
+import { BrandLogo } from './BrandLogo';
 import { MagneticButton } from './MagneticButton';
 
 export const Navbar = () => {
@@ -16,12 +17,12 @@ export const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { label: 'Home', href: '#home' },
-    { label: 'About', href: '#about' },
-    { label: 'Work', href: '#work' },
-    { label: 'Services', href: '#services' },
-    { label: 'Stack', href: '#stack' },
-    { label: 'Contact', href: '#contact' },
+    { label: 'Home', href: '/#home' },
+    { label: 'About', href: '/#about' },
+    { label: 'Work', href: '/#work' },
+    { label: 'Services', href: '/#services' },
+    { label: 'Stack', href: '/#stack' },
+    { label: 'Contact', href: '/#contact' },
   ];
 
   return (
@@ -30,13 +31,8 @@ export const Navbar = () => {
         isScrolled ? 'border-b border-white/10 bg-slate-950/68 backdrop-blur-xl' : 'bg-transparent'
       }`}
     >
-      <div className="section-shell flex items-center justify-between py-4 lg:py-5">
-        <a href="#home" className="interactive flex items-center gap-3" aria-label="devsphere home">
-          <span className="grid h-9 w-9 place-items-center rounded-md border border-sky-300/20 bg-sky-400/10 text-sm font-black text-sky-200 shadow-[0_0_40px_rgba(56,189,248,0.18)]">
-            ds
-          </span>
-          <span className="text-lg font-semibold tracking-tight text-white">devsphere</span>
-        </a>
+      <div className="section-shell flex items-center justify-between py-0.5 lg:py-1">
+        <BrandLogo imageClassName="h-[5.4rem] md:h-[6rem]" />
 
         <div className="hidden items-center gap-8 rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 lg:flex">
           {navLinks.map((link) => (
@@ -90,3 +86,4 @@ export const Navbar = () => {
     </nav>
   );
 };
+

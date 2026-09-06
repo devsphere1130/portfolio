@@ -1,4 +1,5 @@
 import { Mail } from 'lucide-react';
+import { BrandLogo } from './BrandLogo';
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -8,12 +9,7 @@ export const Footer = () => {
       <div className="section-shell py-14">
         <div className="mb-10 grid grid-cols-1 gap-10 md:grid-cols-4">
           <div>
-            <div className="mb-4 flex items-center gap-3">
-              <span className="grid h-9 w-9 place-items-center rounded-md border border-sky-300/20 bg-sky-400/10 text-sm font-black text-sky-200">
-                ds
-              </span>
-              <span className="text-lg font-semibold tracking-tight text-white">devsphere</span>
-            </div>
+            <BrandLogo className="mb-4" imageClassName="h-36 md:h-40" />
             <p className="max-w-xs text-sm leading-6 text-slate-400">
               Premium digital products and business systems engineered with clarity,
               precision and care.
@@ -26,7 +22,7 @@ export const Footer = () => {
               {['Home', 'Work', 'Services', 'Stack', 'Contact'].map((link) => (
                 <li key={link}>
                   <a
-                    href={`#${link.toLowerCase()}`}
+                    href={`/#${link.toLowerCase()}`}
                     className="text-sm text-slate-400 transition-colors hover:text-white"
                   >
                     {link}
@@ -42,7 +38,7 @@ export const Footer = () => {
               {['Web Apps', 'SaaS', 'Backend API', 'Modernization'].map((service) => (
                 <li key={service}>
                   <a
-                    href="#services"
+                    href="/#services"
                     className="text-sm text-slate-400 transition-colors hover:text-white"
                   >
                     {service}
@@ -98,3 +94,4 @@ export const Footer = () => {
     </footer>
   );
 };
+

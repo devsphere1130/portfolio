@@ -19,19 +19,19 @@ const services = [
 const team = [
   {
     title: 'Ajay Gaikwad',
-    meta: 'Full-Stack Developer · 1.5 years experience',
+    meta: 'Full-Stack Developer - 1.5 years experience',
   },
   {
     title: 'Sarthak Zaware',
-    meta: 'Full-Stack Developer · 1.5 years experience',
+    meta: 'Full-Stack Developer - 1.5 years experience',
   },
   {
     title: 'Rushabh Katekar',
-    meta: 'Marketing Team · 1 year experience',
+    meta: 'Marketing Team - 1 year experience',
   },
   {
     title: 'Shivraj Shingan',
-    meta: 'Tester · 2 years experience',
+    meta: 'Tester - 2 years experience',
   },
 ];
 
@@ -78,7 +78,7 @@ export const Hero = () => {
     <section
       id="home"
       ref={rootRef}
-      className="relative min-h-[calc(100vh-5rem)] overflow-hidden pt-24 md:pt-28"
+      className="relative min-h-[calc(100vh-5rem)] overflow-hidden pt-32 md:pt-36"
     >
       <div className="hero-grid absolute inset-0 opacity-45" />
       <div className="absolute right-[-12rem] top-24 h-[34rem] w-[34rem] rounded-full bg-sky-400/10 blur-3xl" />
@@ -156,4 +156,3 @@ export const Hero = () => {
     </section>
   );
 };
-
