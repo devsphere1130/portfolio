@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { ArrowRight } from 'lucide-react';
 import gsap from 'gsap';
 import { AnimatedInfoPanel } from '../components/hero/AnimatedInfoPanel';
+import { HeroRibbon } from '../components/hero/HeroRibbon';
 import { ScrollIndicator } from '../components/hero/ScrollIndicator';
 import { MagneticButton } from '../components/MagneticButton';
 import { HeroScene } from '../components/three/HeroScene';
@@ -78,14 +79,15 @@ export const Hero = () => {
     <section
       id="home"
       ref={rootRef}
-      className="relative min-h-[calc(100vh-5rem)] overflow-hidden pt-32 md:pt-36"
+      className="hero-section relative isolate min-h-[calc(100vh-5rem)] overflow-hidden pt-32 md:pt-36"
     >
       <div className="hero-grid absolute inset-0 opacity-45" />
       <div className="absolute right-[-12rem] top-24 h-[34rem] w-[34rem] rounded-full bg-sky-400/10 blur-3xl" />
       <div className="absolute left-[-18rem] bottom-0 h-[28rem] w-[28rem] rounded-full bg-violet-400/6 blur-3xl" />
+      <HeroRibbon speed={0.18} amplitude={0.18} />
 
-      <div className="relative mx-auto grid min-h-[calc(100vh-7rem)] w-[calc(100%_-_2rem)] max-w-[1280px] items-center gap-8 py-10 lg:grid-cols-[40fr_60fr] lg:py-0 xl:w-[calc(100%_-_4rem)] xl:max-w-[1400px]">
-        <div className="max-w-[34rem]">
+      <div className="relative z-10 mx-auto grid min-h-[calc(100vh-7rem)] w-[calc(100%_-_2rem)] max-w-[1280px] grid-cols-1 items-center gap-8 py-10 lg:grid-cols-[40fr_60fr] lg:py-0 xl:w-[calc(100%_-_4rem)] xl:max-w-[1400px]">
+        <div className="hero-copy min-w-0 max-w-[34rem]">
           <p
             ref={labelRef}
             className="hero-reveal mb-5 text-sm font-bold uppercase tracking-[0.32em] text-sky-300"
@@ -147,7 +149,7 @@ export const Hero = () => {
           </div>
         </div>
 
-        <div ref={sceneRef} className="relative opacity-0 lg:translate-x-8 xl:translate-x-14">
+        <div ref={sceneRef} className="relative min-w-0 opacity-0 lg:translate-x-8 xl:translate-x-14">
           <HeroScene />
         </div>
       </div>

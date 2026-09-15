@@ -44,7 +44,7 @@ export const AnimatedInfoPanel = ({ label, items, delay = 0 }) => {
   }, [delay, items, prefersReducedMotion]);
 
   return (
-    <article className="rounded-lg border border-white/10 bg-slate-950/46 p-4">
+    <article className="rounded-lg border border-sky-300/20 bg-slate-950/80 p-4 backdrop-blur-md">
       <p className="mb-3 text-xs font-bold uppercase tracking-[0.28em] text-sky-300">
         {label}
       </p>

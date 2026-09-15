@@ -10,6 +10,67 @@
   mask-image: linear-gradient(to bottom, black, transparent 78%);
 }
 
+.hero-section {
+  background: radial-gradient(ellipse at 10% 42%, #031923 0%, transparent 55%);
+}
+
+.hero-ribbon {
+  position: absolute;
+  inset: 0 auto 0 clamp(-8rem, calc((100vw - 1600px) / 2), 0rem);
+  z-index: 0;
+  width: clamp(31rem, 35.15vw, 42rem);
+  height: max(54rem, 100svh);
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  mix-blend-mode: screen;
+  mask-image: linear-gradient(to bottom, #000 0%, #000 91%, transparent 100%);
+}
+
+.hero-ribbon__scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0.92;
+  mask-image: linear-gradient(to right, #000 0%, #000 38%, rgb(0 0 0 / 65%) 65%, transparent 93%);
+}
+
+.hero-ribbon__fallback {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at 12% 45%, rgb(0 159 222 / 20%), transparent 65%);
+}
+
+.hero-copy h1,
+.hero-copy > p {
+  text-shadow: 0 2px 16px rgb(0 7 14 / 65%);
+}
+
+@media (max-width: 1023px) {
+  .hero-ribbon {
+    left: -10rem;
+    width: 40rem;
+    height: 58rem;
+  }
+
+  .hero-ribbon__scene {
+    opacity: 0.55;
+    mask-image: linear-gradient(to right, #000 0%, #000 28%, transparent 82%);
+  }
+}
+
+@media (max-width: 639px) {
+  .hero-ribbon {
+    left: -12rem;
+    width: 34rem;
+    height: 56rem;
+  }
+
+  .hero-ribbon__scene {
+    opacity: 0.42;
+  }
+}
+
 .glass-panel {
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.74), rgba(2, 6, 23, 0.58));
   border: 1px solid rgba(148, 163, 184, 0.14);
