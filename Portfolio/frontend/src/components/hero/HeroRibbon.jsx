@@ -54,11 +54,12 @@ export const HeroRibbon = ({ speed = 0.18, amplitude = 0.18 }) => {
             }}
             dpr={[1, 1.25]}
             frameloop={animate ? 'always' : 'demand'}
-            gl={{ alpha: true, antialias: true, powerPreference: 'low-power' }}
+            // Screen blending removes black while keeping bloom colors intact.
+            gl={{ alpha: false, antialias: true, powerPreference: 'low-power' }}
             fallback={<div className="hero-ribbon__fallback" />}
             onCreated={({ gl, camera }) => {
               camera.updateProjectionMatrix();
-              gl.setClearColor(0x000000, 0);
+              gl.setClearColor(0x000000, 1);
               gl.toneMappingExposure = 1.15;
             }}
           >
