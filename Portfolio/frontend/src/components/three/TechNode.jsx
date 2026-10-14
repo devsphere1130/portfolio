@@ -8,7 +8,8 @@ export const TechNode = ({ label, position, mouse }) => {
 
   useFrame((state) => {
     if (!nodeRef.current) return;
-    nodeRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 1.2 + position[0]) * 0.06;
+    // The parent group already sets the anchor position; only bob locally.
+    nodeRef.current.position.y = Math.sin(state.clock.elapsedTime * 1.2 + position[0]) * 0.06;
     nodeRef.current.rotation.y += 0.01 + mouse.current.x * 0.002;
   });
 

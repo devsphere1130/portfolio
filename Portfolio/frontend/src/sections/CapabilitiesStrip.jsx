@@ -1,20 +1,19 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { ServiceCard } from '../components/services/ServiceCard';
+import { ServiceDetailPanel } from '../components/services/ServiceDetailPanel';
+import { useContent } from '../content/hooks';
+import { useDetailPanel } from '../hooks/useDetailPanel';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const capabilities = [
-  'Product Development',
-  'Business Software',
-  'SaaS Platforms',
-  'API & Backend Systems',
-  'Frontend Engineering',
-  'Automation',
-];
-
 export const CapabilitiesStrip = () => {
   const containerRef = useRef(null);
+  const { services: serviceDetails } = useContent();
+  const { activeIndex, isOpen, open, close, contact, cardRef } = useDetailPanel();
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -48,23 +47,33 @@ export const CapabilitiesStrip = () => {
     >
       <div className="section-shell">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {capabilities.map((capability, index) => (
-            <div
-              key={capability}
-              className="capability-item flex items-center gap-4 rounded-md border border-white/10 bg-white/[0.025] p-5"
-            >
-              <div className="font-mono text-lg font-bold tabular-nums text-sky-300 md:text-2xl">
-                {String(index + 1).padStart(2, '0')}
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-white md:text-lg">
-                  {capability}
-                </h3>
-              </div>
-            </div>
+          {serviceDetails.map((service, index) => (
+            <ServiceCard
+              key={service.id}
+              ref={cardRef(index)}
+              service={service}
+              index={index}
+              active={activeIndex === index}
+              onOpen={open}
+            />
           ))}
         </div>
       </div>
+
+      {createPortal(
+        <AnimatePresence>
+          {isOpen && (
+            <ServiceDetailPanel
+              services={serviceDetails}
+              activeIndex={activeIndex}
+              onSelect={open}
+              onClose={close}
+              onContact={contact}
+            />
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
     </section>
   );
 };

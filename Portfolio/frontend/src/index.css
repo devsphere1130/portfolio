@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "./components/hero/hero-content.css";
+@import "./components/about/about.css";
+@import "./components/contact/contact.css";
 
 html {
   background: #05070a;

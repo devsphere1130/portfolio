@@ -5,6 +5,10 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
+// The page's active Lenis instance, for components that must pause or drive scrolling.
+let activeLenis = null;
+export const getLenis = () => activeLenis;
+
 export const useLenis = () => {
   const lenisRef = useRef(null);
 
@@ -16,6 +20,7 @@ export const useLenis = () => {
     });
 
     lenisRef.current = lenis;
+    activeLenis = lenis;
     lenis.on('scroll', ScrollTrigger.update);
 
     const raf = (time) => {
@@ -29,6 +34,7 @@ export const useLenis = () => {
       gsap.ticker.remove(raf);
       lenis.off('scroll', ScrollTrigger.update);
       lenis.destroy();
+      if (activeLenis === lenis) activeLenis = null;
     };
   }, []);
 

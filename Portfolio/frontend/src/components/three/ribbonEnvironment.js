@@ -3,8 +3,9 @@ import { DataTexture, EquirectangularReflectionMapping, FloatType, LinearFilter,
 // A small HDR lighting map generated entirely from Gaussian strip lights.
 // Smooth falloff avoids rectangular reflections on the polished sheets.
 export function createRibbonEnvironment() {
-  const width = 512;
-  const height = 256;
+  // 256x128 is plenty for these soft lights and keeps the main thread free on load.
+  const width = 256;
+  const height = 128;
   const pixels = new Float32Array(width * height * 4);
   const lights = [
     { x: 0.64, y: 0.5, sx: 0.065, sy: 0.36, power: 3, color: [0.02, 0.75, 1] },

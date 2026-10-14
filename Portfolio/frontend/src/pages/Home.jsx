@@ -13,9 +13,11 @@ import { Services } from '../sections/Services';
 import { Stats } from '../sections/Stats';
 import { TechStack } from '../sections/TechStack';
 import { useLenis } from '../hooks/useLenis';
+import { usePageMeta } from '../content/hooks';
 
 export const Home = () => {
   useLenis();
+  usePageMeta('home');
 
   return (
     <motion.div

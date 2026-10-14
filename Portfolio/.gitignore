@@ -1,0 +1,14 @@
+# Secrets and local environment files (templates are committed as *.example)
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+!.env.*.example
+!**/.env.*.example
+
+# Local backups and data dumps
+backups/
+*.dump
+*.sql.gz

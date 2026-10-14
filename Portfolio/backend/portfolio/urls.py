@@ -1,13 +1,7 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import ProjectViewSet, SkillViewSet, AboutViewSet, api_overview
+from django.urls import path
 
-router = DefaultRouter()
-router.register(r'projects', ProjectViewSet)
-router.register(r'skills', SkillViewSet)
-router.register(r'about', AboutViewSet)
+from .views import ContactInquiryView
 
 urlpatterns = [
-    path('', api_overview, name='api-overview'),
-    path('', include(router.urls)),
+    path('contact/', ContactInquiryView.as_view(), name='contact-inquiry'),
 ]

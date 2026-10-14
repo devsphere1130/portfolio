@@ -65,13 +65,22 @@ export const ProjectCard = ({ project, index }) => {
       data-cursor="view"
     >
       <div className="project-image relative min-h-[20rem] overflow-hidden rounded-lg border border-white/10 bg-slate-900 md:min-h-[28rem]">
-        <img
-          ref={imageRef}
-          src={project.image}
-          alt={project.title}
-          loading="lazy"
-          className="h-full w-full object-cover opacity-80 saturate-90 transition-opacity duration-300 group-hover:opacity-100"
-        />
+        {project.image ? (
+          <img
+            ref={imageRef}
+            src={project.image}
+            alt={project.imageAlt || project.title}
+            loading="lazy"
+            className="h-full w-full object-cover opacity-80 saturate-90 transition-opacity duration-300 group-hover:opacity-100"
+          />
+        ) : (
+          // No cover uploaded yet: a branded placeholder instead of a broken or borrowed image.
+          <div ref={imageRef} aria-hidden="true" className="absolute inset-0 grid place-items-center bg-[radial-gradient(circle_at_30%_20%,rgba(56,189,248,0.22),transparent_55%),radial-gradient(circle_at_80%_90%,rgba(165,164,243,0.16),transparent_50%),#070d17]">
+            <span className="font-mono text-6xl font-bold tracking-tight text-sky-200/20 md:text-8xl">
+              {project.title.split(' ').map((word) => word[0]).join('').slice(0, 3)}
+            </span>
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
         <div className="absolute bottom-6 left-6 flex items-center gap-3 rounded-full border border-white/10 bg-slate-950/70 px-4 py-2 text-white opacity-0 backdrop-blur-md transition-opacity duration-300 group-hover:opacity-100">
             <span className="text-sm font-semibold">View Case Study</span>

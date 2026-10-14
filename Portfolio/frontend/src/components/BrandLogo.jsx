@@ -1,4 +1,4 @@
-import logoUrl from '../assets/logo-clean.png';
+import logoUrl from '../assets/logo-clean-512.png';
 
 export const BrandLogo = ({ className = '', imageClassName = '' }) => {
   return (

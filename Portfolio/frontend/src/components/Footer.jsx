@@ -1,8 +1,10 @@
 import { Mail } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
+import { useContent } from '../content/hooks';
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const { contact: contactDetails, socialLinks, site } = useContent();
 
   return (
     <footer className="bg-[#05070a]">
@@ -11,8 +13,7 @@ export const Footer = () => {
           <div>
             <BrandLogo className="mb-4" imageClassName="h-36 md:h-40" />
             <p className="max-w-xs text-sm leading-6 text-slate-400">
-              Premium digital products and business systems engineered with clarity,
-              precision and care.
+              {site?.footer_tagline || 'Premium digital products and business systems engineered with clarity, precision and care.'}
             </p>
           </div>
 
@@ -22,7 +23,7 @@ export const Footer = () => {
               {['Home', 'Work', 'Services', 'Stack', 'Contact'].map((link) => (
                 <li key={link}>
                   <a
-                    href={`/#${link.toLowerCase()}`}
+                    href={link === 'Contact' ? '/contact' : `/#${link.toLowerCase()}`}
                     className="text-sm text-slate-400 transition-colors hover:text-white"
                   >
                     {link}
@@ -52,39 +53,29 @@ export const Footer = () => {
             <h4 className="mb-4 font-semibold text-white">Get in Touch</h4>
             <div className="flex flex-col gap-3">
               <a
-                href="mailto:contact@devsphere.dev"
+                href={`mailto:${contactDetails.email}`}
                 className="flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-white"
               >
                 <Mail size={16} />
-                <span>contact@devsphere.dev</span>
+                <span>{contactDetails.email}</span>
               </a>
-              <div className="flex gap-4">
-                <a
-                  href="https://github.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-slate-400 transition-colors hover:text-white"
-                  aria-label="GitHub"
-                >
-                  <span className="text-sm font-bold">GH</span>
-                </a>
-                <a
-                  href="https://linkedin.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-slate-400 transition-colors hover:text-white"
-                  aria-label="LinkedIn"
-                >
-                  <span className="text-sm font-bold">IN</span>
-                </a>
-              </div>
+              {socialLinks.length > 0 && (
+                <div className="flex flex-wrap gap-4">
+                  {socialLinks.map((link) => (
+                    <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer"
+                       className="text-sm font-semibold text-slate-400 transition-colors hover:text-white">
+                      {link.label}
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         <div className="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 md:flex-row">
           <p className="text-sm text-slate-500">
-            Copyright {currentYear} devsphere. All rights reserved.
+            Copyright {currentYear} {site?.site_name || 'devsphere'}. All rights reserved.
           </p>
           <p className="text-sm text-slate-500">
             Designed & engineered with React + Django

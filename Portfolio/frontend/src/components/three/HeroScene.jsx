@@ -4,16 +4,25 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { DigitalCore } from './DigitalCore';
 import { ParticleField } from './ParticleField';
+import { ReadySignal } from './ReadySignal';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 
 const CameraRig = ({ mouse, hoverRef }) => {
   const lightRef = useRef(null);
-  const { camera } = useThree();
+  const { camera, size } = useThree();
+
+  useEffect(() => {
+    // Fit the complete rotating orbit in the narrower canvas dimension.
+    // 2.25 includes the outer ring, its nodes, and the core's gentle bob.
+    const halfVerticalFov = THREE.MathUtils.degToRad(camera.fov / 2);
+    const halfFov = Math.atan(Math.tan(halfVerticalFov) * Math.min(size.width / size.height, 1));
+    camera.position.z = Math.max(6.2, 2.25 / Math.sin(halfFov));
+  }, [camera, size.width, size.height]);
 
   useFrame(() => {
-    camera.position.x = THREE.MathUtils.lerp(camera.position.x, mouse.current.x * 0.58, 0.045);
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, 0.28 + mouse.current.x * 0.58, 0.045);
     camera.position.y = THREE.MathUtils.lerp(camera.position.y, mouse.current.y * 0.32, 0.045);
-    camera.lookAt(0, 0, 0);
+    camera.lookAt(0.28, 0, 0);
 
     if (lightRef.current) {
       lightRef.current.position.x = THREE.MathUtils.lerp(lightRef.current.position.x, 2 + mouse.current.x * 1.4, 0.05);
@@ -40,16 +49,35 @@ const SceneContent = ({ mouse, hoverRef, reduced }) => (
     <CameraRig mouse={mouse} hoverRef={hoverRef} />
     <DigitalCore mouse={mouse} hoverRef={hoverRef} reduced={reduced} />
     <ParticleField mouse={mouse} reduced={reduced} />
-    <Environment preset="city" />
+    {/* Own boundary so the core renders immediately; reflections arrive once the HDR loads. */}
+    <Suspense fallback={null}>
+      <Environment files="/hdr/potsdamer_platz_1k.hdr" />
+    </Suspense>
   </>
 );
 
-export const HeroScene = () => {
+export const HeroScene = ({ onReady }) => {
   const mouse = useRef({ x: 0, y: 0 });
   const target = useRef({ x: 0, y: 0 });
   const hoverRef = useRef(false);
   const prefersReducedMotion = useReducedMotion();
   const [webglFailed, setWebglFailed] = useState(false);
+  const containerRef = useRef(null);
+  const [inView, setInView] = useState(true);
+  const [pageVisible, setPageVisible] = useState(() => !document.hidden);
+
+  // Stop rendering while scrolled away or in a background tab; the last frame stays on screen.
+  useEffect(() => {
+    if (!containerRef.current) return undefined;
+    const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting));
+    observer.observe(containerRef.current);
+    const handleVisibility = () => setPageVisible(!document.hidden);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [webglFailed]);
 
   useEffect(() => {
     const handlePointerMove = (event) => {
@@ -73,6 +101,7 @@ export const HeroScene = () => {
 
   return (
     <div
+      ref={containerRef}
       className="relative h-[27rem] min-h-[27rem] w-full overflow-visible md:h-[36rem] lg:h-[calc(100vh-7rem)] lg:min-h-[40rem]"
       onPointerEnter={() => {
         hoverRef.current = true;
@@ -85,6 +114,8 @@ export const HeroScene = () => {
       <div className="absolute inset-6 rounded-full bg-sky-300/10 blur-3xl" />
       <Canvas
         dpr={[1, 1.5]}
+        frameloop={inView && pageVisible ? 'always' : 'never'}
+        resize={{ offsetSize: true }}
         camera={{ position: [0, 0, 6.2], fov: 38 }}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
         onCreated={({ gl }) => {
@@ -95,6 +126,7 @@ export const HeroScene = () => {
         <Suspense fallback={null}>
           <MouseSmoother mouse={mouse} target={target} />
           <SceneContent mouse={mouse} hoverRef={hoverRef} reduced={prefersReducedMotion} />
+          <ReadySignal onReady={onReady} />
         </Suspense>
       </Canvas>
       <div className="pointer-events-none absolute left-4 top-8 hidden text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-sky-200/50 md:block">

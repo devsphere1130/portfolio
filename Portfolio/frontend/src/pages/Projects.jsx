@@ -6,11 +6,14 @@ import { MouseLight } from '../components/effects/MouseLight';
 import { Footer } from '../components/Footer';
 import { Navbar } from '../components/Navbar';
 import { ProjectCard } from '../components/ProjectCard';
-import { projectsData } from '../data/projects';
+import { pick, useContent, usePageMeta, useSection } from '../content/hooks';
 import { useLenis } from '../hooks/useLenis';
 
 export const Projects = () => {
   useLenis();
+  usePageMeta('projects');
+  const { projects: projectsData } = useContent();
+  const intro = useSection('projects', 'intro');
 
   return (
     <motion.div
@@ -35,13 +38,13 @@ export const Projects = () => {
 
           <div className="mt-10 max-w-4xl">
             <p className="text-sm font-bold uppercase tracking-[0.32em] text-sky-300">
-              All Projects
+              {pick(intro, 'eyebrow', 'All Projects')}
             </p>
             <h1 className="mt-5 text-balance text-5xl font-semibold leading-[1.02] tracking-tight text-white md:text-7xl">
-              Production-ready work across web apps, SaaS and business systems.
+              {pick(intro, 'title', 'Production-ready work across web apps, SaaS and business systems.')}
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-400">
-              Explore the complete project collection, from dashboards and backend systems to scalable product platforms.
+              {pick(intro, 'description', 'Explore the complete project collection, from dashboards and backend systems to scalable product platforms.')}
             </p>
           </div>
 

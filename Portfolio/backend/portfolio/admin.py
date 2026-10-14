@@ -1,24 +1,12 @@
 from django.contrib import admin
-from .models import Project, Skill, About
 
-# Register your models here.
-
-
-@admin.register(Project)
-class ProjectAdmin(admin.ModelAdmin):
-    list_display = ['title', 'created_at', 'updated_at']
-    search_fields = ['title', 'description']
-    list_filter = ['created_at']
+from .models import ContactInquiry
 
 
-@admin.register(Skill)
-class SkillAdmin(admin.ModelAdmin):
-    list_display = ['name', 'proficiency', 'category']
-    search_fields = ['name']
-    list_filter = ['category']
-
-
-@admin.register(About)
-class AboutAdmin(admin.ModelAdmin):
-    list_display = ['title', 'email']
-    search_fields = ['title', 'email']
+@admin.register(ContactInquiry)
+class ContactInquiryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'email', 'service', 'budget', 'status', 'created_at']
+    list_filter = ['status', 'service', 'budget', 'created_at']
+    list_editable = ['status']
+    search_fields = ['name', 'email', 'company', 'details']
+    readonly_fields = ['name', 'email', 'company', 'service', 'budget', 'details', 'ip_address', 'user_agent', 'created_at', 'updated_at']

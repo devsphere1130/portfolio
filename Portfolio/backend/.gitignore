@@ -42,3 +42,11 @@ build/
 # Virtual environments
 pip-log.txt
 pip-delete-this-directory.txt
+
+# Local data that must never be committed
+legacy_inquiries.json
+media/
+staticfiles/
+.env.*
+!.env.example
+!.env.*.example

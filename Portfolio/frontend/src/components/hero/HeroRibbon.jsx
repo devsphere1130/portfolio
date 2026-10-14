@@ -1,6 +1,7 @@
-import { Component, useEffect, useRef, useState } from 'react';
+import { Component, useCallback, useEffect, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { RibbonScene } from '../three/RibbonScene';
+import { ReadySignal } from '../three/ReadySignal';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 
 class RibbonBoundary extends Component {
@@ -16,12 +17,13 @@ class RibbonBoundary extends Component {
 }
 
 // Speed is radians per second: 0.18 gives a gentle, roughly 35-second wave.
-export const HeroRibbon = ({ speed = 0.18, amplitude = 0.18 }) => {
+export const HeroRibbon = ({ speed = 0.18, amplitude = 0.18, onReady }) => {
   const rootRef = useRef(null);
   const prefersReducedMotion = useReducedMotion();
   const [inView, setInView] = useState(true);
   const [pageVisible, setPageVisible] = useState(() => !document.hidden);
   const animate = inView && pageVisible && !prefersReducedMotion && speed > 0;
+  const handleReady = useCallback(() => onReady?.(rootRef.current), [onReady]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting));
@@ -64,6 +66,7 @@ export const HeroRibbon = ({ speed = 0.18, amplitude = 0.18 }) => {
             }}
           >
             <RibbonScene animate={animate} speed={speed} amplitude={amplitude} />
+            <ReadySignal onReady={handleReady} />
           </Canvas>
         </RibbonBoundary>
       </div>

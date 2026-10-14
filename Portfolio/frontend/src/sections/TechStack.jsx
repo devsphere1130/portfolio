@@ -1,13 +1,15 @@
-import { technologiesData } from '../data/technologies';
+import { pick, useContent, useSection } from '../content/hooks';
 import { SectionHeading } from '../components/SectionHeading';
 import { TechItem } from '../components/TechItem';
 
 export const TechStack = () => {
+  const { technologies: technologiesData } = useContent();
+  const section = useSection('home', 'tech-stack');
   return (
     <section id="stack" className="py-24 md:py-32">
       <div className="section-shell">
-        <SectionHeading subtitle="A practical engineering stack for scalable business applications, REST APIs, dashboards and polished customer-facing interfaces.">
-          Technology chosen for product outcomes.
+        <SectionHeading subtitle={pick(section, 'subtitle', 'A practical engineering stack for scalable business applications, REST APIs, dashboards and polished customer-facing interfaces.')}>
+          {pick(section, 'title', 'Technology chosen for product outcomes.')}
         </SectionHeading>
         <div className="mt-14 grid gap-5 lg:grid-cols-2">
           {technologiesData.map((group) => (

@@ -1,0 +1,47 @@
+/* Admin dashboard. Same dark navy + aqua identity as the public site, tuned for dense, readable UI. */
+/* In Tailwind's `components` layer so utility classes (lg:hidden, sr-only, ...) can override these. */
+@layer components {
+.admin-app {
+  --ad-bg: #05070a; --ad-panel: #0a111c; --ad-panel-2: #0d1624; --ad-line: rgb(148 163 184 / 14%);
+  --ad-line-strong: rgb(148 163 184 / 26%); --ad-text: #e6eef6; --ad-muted: #93a3b5; --ad-cyan: #5cc8ff;
+  min-height: 100vh; background: var(--ad-bg); color: var(--ad-text); font-family: var(--font-hero-body);
+}
+.admin-input {
+  width: 100%; min-height: 40px; padding: 8px 12px; border: 1px solid var(--ad-line-strong); border-radius: 8px;
+  background: rgb(255 255 255 / 3%); color: var(--ad-text); font-size: 14px; transition: border-color 150ms, box-shadow 150ms;
+}
+.admin-input::placeholder { color: #66778a; }
+.admin-input:focus { outline: none; border-color: rgb(92 200 255 / 70%); box-shadow: 0 0 0 3px rgb(92 200 255 / 16%); }
+.admin-input[aria-invalid="true"] { border-color: rgb(255 140 140 / 70%); }
+textarea.admin-input { min-height: 96px; resize: vertical; line-height: 1.55; }
+select.admin-input option { background: #0b1320; }
+.admin-label { display: block; margin-bottom: 6px; color: #cdd9e4; font-size: 13px; font-weight: 600; }
+.admin-hint { margin-top: 4px; color: var(--ad-muted); font-size: 12px; }
+.admin-error { margin-top: 4px; color: #ff9a9a; font-size: 12px; }
+.admin-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 38px; padding: 0 14px;
+  border: 1px solid var(--ad-line-strong); border-radius: 8px; color: var(--ad-text); background: rgb(255 255 255 / 3%);
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: background 150ms, border-color 150ms, opacity 150ms;
+}
+.admin-btn:hover:not(:disabled) { border-color: rgb(92 200 255 / 45%); background: rgb(92 200 255 / 6%); }
+.admin-btn:focus-visible, .admin-link:focus-visible { outline: 2px solid var(--ad-cyan); outline-offset: 2px; }
+.admin-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.admin-btn-primary { border-color: rgb(178 236 255 / 55%); color: #031321; background: linear-gradient(115deg, #89e0f6, #5cc8ff 60%, #59b5f8); }
+.admin-btn-primary:hover:not(:disabled) { background: linear-gradient(115deg, #a5e9fa, #79d3ff 60%, #6fc0fa); }
+.admin-btn-danger { border-color: rgb(255 140 140 / 40%); color: #ffc4c4; }
+.admin-btn-danger:hover:not(:disabled) { border-color: rgb(255 140 140 / 70%); background: rgb(255 100 100 / 8%); }
+.admin-btn-sm { min-height: 30px; padding: 0 10px; font-size: 12px; }
+.admin-card { border: 1px solid var(--ad-line); border-radius: 12px; background: var(--ad-panel); }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.admin-table th { padding: 10px 12px; border-bottom: 1px solid var(--ad-line); color: var(--ad-muted); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-align: left; text-transform: uppercase; }
+.admin-table td { padding: 12px; border-bottom: 1px solid var(--ad-line); vertical-align: middle; }
+.admin-table tbody tr:hover { background: rgb(255 255 255 / 2%); }
+.admin-badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.admin-badge-published { color: #a7f3d0; background: rgb(16 185 129 / 14%); }
+.admin-badge-draft { color: #fde68a; background: rgb(245 158 11 / 14%); }
+.admin-badge-muted { color: var(--ad-muted); background: rgb(148 163 184 / 12%); }
+.admin-badge-new { color: #bae6fd; background: rgb(56 189 248 / 16%); }
+.admin-link { color: var(--ad-cyan); text-decoration: underline; text-underline-offset: 3px; }
+.admin-scroll { scrollbar-width: thin; scrollbar-color: rgb(125 211 252 / 35%) transparent; }
+@media (prefers-reduced-motion: reduce) { .admin-app * { transition: none !important; animation: none !important; } }
+}

@@ -1,0 +1,96 @@
+# DevSphere — local development stack.
+#   docker compose up --build          start everything (frontend :5173, API :8000, Postgres :5433)
+#   docker compose up db               only Postgres (run Django/Vite on the host instead)
+# Production uses compose.prod.yaml. Never run `docker compose down -v` casually: it deletes the database volume.
+
+name: devsphere
+
+x-db-env: &db-env
+  POSTGRES_DB: ${POSTGRES_DB:-devsphere}
+  POSTGRES_USER: ${POSTGRES_USER:-devsphere}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in Portfolio/.env (copy .env.example)}
+
+services:
+  db:
+    # Optional: only started when COMPOSE_PROFILES includes docker-db (see .env). Leave it out to use a
+    # PostgreSQL installed on your machine instead (DOCKER_DATABASE_HOST=host.docker.internal).
+    profiles: [docker-db]
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment: *db-env
+    volumes:
+      - pgdata:/var/lib/postgresql
+    ports:
+      # Host port 5433 avoids clashing with a locally installed PostgreSQL on 5432.
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [internal]
+
+  backend:
+    build:
+      context: ./backend
+      target: dev
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env   # DATABASE_URL (credentials) and the other Django settings
+    environment:
+      # Same database as DATABASE_URL, reached from inside the container:
+      #   docker-db profile -> the `db` service;  your own PostgreSQL -> host.docker.internal:5432
+      DATABASE_HOST: ${DOCKER_DATABASE_HOST:-db}
+      DATABASE_PORT: ${DOCKER_DATABASE_PORT:-5432}
+      DJANGO_ENV: development
+      DJANGO_DEBUG: "True"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,backend
+      MEDIA_ROOT: /app/media
+      PYTHONDONTWRITEBYTECODE: "1"
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py createcachetable &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      # Source and uploads (backend/media/, git-ignored) come from the host, so running Django
+      # in Docker or straight from the venv shows the same files.
+      - ./backend:/app
+    ports:
+      - "127.0.0.1:${BACKEND_HOST_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+        required: false   # not started when using your own PostgreSQL
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # also works on Linux hosts
+    networks: [internal]
+
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+    restart: unless-stopped
+    environment:
+      VITE_API_PROXY: http://backend:8000
+      CHOKIDAR_USEPOLLING: "true"  # reliable file watching on Windows/macOS bind mounts
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules  # keep the container's Linux node_modules, not the host's
+    ports:
+      - "127.0.0.1:5173:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [internal]
+
+volumes:
+  pgdata:   # database files — survives rebuilds and `docker compose down`
+
+networks:
+  internal:

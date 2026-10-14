@@ -18,11 +18,11 @@ export const Navbar = () => {
 
   const navLinks = [
     { label: 'Home', href: '/#home' },
-    { label: 'About', href: '/#about' },
+    { label: 'About', href: '/about' },
     { label: 'Work', href: '/#work' },
     { label: 'Services', href: '/#services' },
     { label: 'Stack', href: '/#stack' },
-    { label: 'Contact', href: '/#contact' },
+    { label: 'Contact', href: '/contact' },
   ];
 
   return (
@@ -48,7 +48,7 @@ export const Navbar = () => {
         </div>
 
         <div className="hidden lg:block">
-          <MagneticButton className="interactive rounded-md border border-sky-200/40 bg-sky-300 px-5 py-3 text-sm font-bold !text-slate-950 shadow-[0_0_36px_rgba(56,189,248,0.22)] transition-colors hover:bg-sky-200 hover:!text-slate-950">
+          <MagneticButton href="/contact" className="interactive rounded-md border border-sky-200/40 bg-sky-300 px-5 py-3 text-sm font-bold !text-slate-950 shadow-[0_0_36px_rgba(56,189,248,0.22)] transition-colors hover:bg-sky-200 hover:!text-slate-950">
             Start a Project
           </MagneticButton>
         </div>
@@ -77,9 +77,9 @@ export const Navbar = () => {
                 {link.label}
               </a>
             ))}
-            <button className="mt-3 w-full rounded-md bg-sky-300 px-6 py-3 font-bold text-slate-950 transition-colors hover:bg-sky-200">
+            <a href="/contact" className="mt-3 block w-full rounded-md bg-sky-300 px-6 py-3 text-center font-bold text-slate-950 transition-colors hover:bg-sky-200">
               Start a Project
-            </button>
+            </a>
           </div>
         </div>
       )}
