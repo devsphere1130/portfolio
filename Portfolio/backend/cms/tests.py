@@ -253,11 +253,11 @@ class DashboardAndInquiryTests(Base):
     def test_admin_updates_inquiry_status_but_cannot_edit_content(self):
         inquiry = ContactInquiry.objects.create(name='A', email='a@example.com', service='saas', details='x' * 30)
         client = signed_in(self.admin)
-        response = client.patch(f'/api/admin/inquiries/{inquiry.pk}/', {'status': 'in_progress', 'details': 'tampered'}, format='json')
+        response = client.patch(f'/api/admin/inquiries/{inquiry.pk}/', {'lead_status': 'contacted', 'details': 'tampered'}, format='json')
         self.assertEqual(response.status_code, 200)
         inquiry.refresh_from_db()
-        self.assertEqual((inquiry.status, inquiry.details), ('in_progress', 'x' * 30))
-        self.assertEqual(client.get('/api/admin/inquiries/?status=new').data['count'], 0)
+        self.assertEqual((inquiry.lead_status, inquiry.details), ('contacted', 'x' * 30))
+        self.assertEqual(client.get('/api/admin/inquiries/?lead_status=new').data['count'], 0)
 
     def test_health(self):
         self.assertEqual(APIClient().get('/api/health/').data, {'status': 'ok', 'database': 'ok'})

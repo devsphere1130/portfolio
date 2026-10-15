@@ -1,6 +1,7 @@
 from django.db import connection, transaction
 from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -11,6 +12,9 @@ from rest_framework.views import APIView
 from accounts.models import User
 from accounts.permissions import IsAdminRole, IsDashboardUser
 from portfolio.models import ContactInquiry
+
+from whatsapp.models import WhatsAppConfiguration
+from whatsapp.serializers import PublicWhatsAppSerializer
 
 from . import pages as page_service
 from .audit import record
@@ -32,6 +36,7 @@ from .models import (
 from .serializers import (
     AuditLogSerializer,
     CapabilitySerializer,
+    InquiryNoteSerializer,
     InquirySerializer,
     MediaAssetSerializer,
     MediaUploadSerializer,
@@ -342,28 +347,94 @@ class SiteSettingsView(APIView):
 
 class InquiryViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                      mixins.DestroyModelMixin, viewsets.GenericViewSet):
-    """Private: contact form submissions. Admins only; never exposed publicly."""
+    """Private lead management for website inquiries. Admins only; never exposed publicly."""
 
     permission_classes = [IsAdminRole]
     serializer_class = InquirySerializer
-    queryset = ContactInquiry.objects.all()
-    search_fields = ['name', 'email', 'company', 'details']
-    ordering_fields = ['created_at', 'status']
-    http_method_names = ['get', 'patch', 'delete']
+    queryset = ContactInquiry.objects.select_related('assigned_to', 'related_project', 'related_capability')
+    search_fields = ['name', 'email', 'company', 'details', 'phone_number']
+    ordering_fields = ['created_at', 'lead_status', 'follow_up_at', 'last_contacted_at', 'name']
+    ordering = ['-created_at']
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_queryset(self):
-        wanted = self.request.query_params.get('status')
-        return self.queryset.filter(status=wanted) if wanted in ContactInquiry.Status.values else self.queryset
+        queryset, params = self.queryset, self.request.query_params
+        if params.get('lead_status') in ContactInquiry.LeadStatus.values:
+            queryset = queryset.filter(lead_status=params['lead_status'])
+        elif params.get('lead_status') == 'open':
+            queryset = queryset.exclude(lead_status__in=[ContactInquiry.LeadStatus.ARCHIVED, ContactInquiry.LeadStatus.CONVERTED,
+                                                         ContactInquiry.LeadStatus.NOT_QUALIFIED])
+        if params.get('source') in ContactInquiry.Source.values:
+            queryset = queryset.filter(inquiry_source=params['source'])
+        assigned = params.get('assigned')
+        if assigned == 'me':
+            queryset = queryset.filter(assigned_to=self.request.user)
+        elif assigned == 'none':
+            queryset = queryset.filter(assigned_to__isnull=True)
+        if params.get('due') == '1':
+            queryset = queryset.filter(follow_up_at__lte=timezone.now())
+        return queryset
 
     def perform_update(self, serializer):
+        before = {f: getattr(serializer.instance, f) for f in InquirySerializer.EDITABLE}
         inquiry = serializer.save()
-        record(self.request.user, 'inquiry.status_changed', 'inquiry', inquiry.pk,
-               f'Marked inquiry from {inquiry.name} as {inquiry.get_status_display().lower()}', request=self.request)
+        changed = sorted(f for f in InquirySerializer.EDITABLE if getattr(inquiry, f) != before[f])
+        summary = (f'Marked {inquiry.name} as {inquiry.get_lead_status_display().lower()}' if 'lead_status' in changed
+                   else f'Updated lead {inquiry.name}')
+        record(self.request.user, 'inquiry.updated', 'inquiry', inquiry.pk, summary, {'fields': changed}, request=self.request)
 
     def perform_destroy(self, instance):
         pk, name = instance.pk, instance.name
         instance.delete()
         record(self.request.user, 'inquiry.deleted', 'inquiry', pk, f'Deleted inquiry from {name}', request=self.request)
+
+    @action(detail=True, methods=['get', 'post'])
+    def notes(self, request, pk=None):
+        inquiry = self.get_object()
+        if request.method == 'GET':
+            return Response(InquiryNoteSerializer(inquiry.notes.select_related('author'), many=True).data)
+        serializer = InquiryNoteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        note = serializer.save(inquiry=inquiry, author=request.user)
+        record(request.user, 'inquiry.note_added', 'inquiry', inquiry.pk, f'Added a note to {inquiry.name}', request=request)
+        return Response(InquiryNoteSerializer(note).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='mark-contacted')
+    def mark_contacted(self, request, pk=None):
+        """The admin confirms they reached out (e.g. after sending a WhatsApp message by hand)."""
+        inquiry = self.get_object()
+        inquiry.last_contacted_at = timezone.now()
+        if inquiry.lead_status in (ContactInquiry.LeadStatus.NEW, ContactInquiry.LeadStatus.AWAITING_RESPONSE):
+            inquiry.lead_status = ContactInquiry.LeadStatus.CONTACTED
+        inquiry.save(update_fields=['last_contacted_at', 'lead_status', 'updated_at'])
+        record(request.user, 'inquiry.contacted', 'inquiry', inquiry.pk, f'Marked {inquiry.name} as contacted', request=request)
+        return Response(self.get_serializer(inquiry).data)
+
+    @action(detail=False, methods=['get'])
+    def export(self, request):
+        """CSV of the filtered leads (no internal notes). Cells are guarded against spreadsheet formula injection."""
+        import csv
+        from django.http import HttpResponse
+
+        def safe(value):
+            text = '' if value is None else str(value)
+            return "'" + text if text[:1] in ('=', '+', '-', '@', '\t', '\r') else text
+
+        rows = self.filter_queryset(self.get_queryset())
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = f'attachment; filename="devsphere-inquiries-{timezone.now():%Y%m%d}.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['Received', 'Name', 'Email', 'Phone', 'Company', 'Needs', 'Budget', 'Source', 'Related',
+                         'Lead status', 'Assigned to', 'Last contacted', 'Follow up', 'Message'])
+        for i in rows:
+            related = (i.related_project and i.related_project.title) or (i.related_capability and i.related_capability.title) or ''
+            writer.writerow([safe(v) for v in (i.created_at.isoformat(), i.name, i.email, i.phone_number, i.company,
+                                                i.get_service_display(), i.get_budget_display(), i.get_inquiry_source_display(),
+                                                related, i.get_lead_status_display(), i.assigned_to.email if i.assigned_to else '',
+                                                i.last_contacted_at.isoformat() if i.last_contacted_at else '',
+                                                i.follow_up_at.isoformat() if i.follow_up_at else '', i.details)])
+        record(request.user, 'inquiry.exported', 'inquiry', '', f'Exported {rows.count()} inquiries to CSV', request=request)
+        return response
 
 
 class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
@@ -408,7 +479,7 @@ class DashboardView(APIView):
         }
         if request.user.is_admin:
             data['inquiries'] = {
-                'new': ContactInquiry.objects.filter(status=ContactInquiry.Status.NEW).count(),
+                'new': ContactInquiry.objects.filter(lead_status=ContactInquiry.LeadStatus.NEW).count(),
                 'total': ContactInquiry.objects.count(),
             }
             data['recent_activity'] = AuditLogSerializer(AuditLog.objects.select_related('actor_user')[:8], many=True).data
@@ -469,6 +540,7 @@ class PublicContentView(PublicView):
             'technologies': PublicTechnologySerializer(published(TechnologyItem.objects.all(), preview), many=True).data,
             'team': PublicTeamMemberSerializer(published(TeamMember.objects.select_related('profile_media'), preview), many=True, context=ctx).data,
             'projects': PublicProjectSerializer(projects, many=True, context=ctx).data,
+            'whatsapp': PublicWhatsAppSerializer(WhatsAppConfiguration.load()).data,
         }
         return cache_headers(Response(data), preview)
 

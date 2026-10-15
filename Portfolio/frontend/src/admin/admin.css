@@ -42,6 +42,14 @@ select.admin-input option { background: #0b1320; }
 .admin-badge-muted { color: var(--ad-muted); background: rgb(148 163 184 / 12%); }
 .admin-badge-new { color: #bae6fd; background: rgb(56 189 248 / 16%); }
 .admin-link { color: var(--ad-cyan); text-decoration: underline; text-underline-offset: 3px; }
+/* Touch screens: comfortable tap targets (≥40px) without changing the desktop density. */
+@media (pointer: coarse) {
+  .admin-btn { min-height: 44px; }
+  .admin-btn-sm { min-height: 40px; min-width: 40px; padding: 0 12px; }
+  .admin-link, .admin-tap, .admin-table td a:not(.admin-btn), .admin-table td button:not(.admin-btn) {
+    display: inline-block; margin-block: -10px; padding-block: 10px;
+  }
+}
 .admin-scroll { scrollbar-width: thin; scrollbar-color: rgb(125 211 252 / 35%) transparent; }
 @media (prefers-reduced-motion: reduce) { .admin-app * { transition: none !important; animation: none !important; } }
 }

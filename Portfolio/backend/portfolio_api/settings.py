@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'accounts',
     'cms',
     'portfolio',
+    'whatsapp',
 ]
 
 MIDDLEWARE = [
@@ -277,6 +278,8 @@ REST_FRAMEWORK = {
         'login_ip': env('LOGIN_THROTTLE_IP_RATE', default='10/min'),
         'login_email': env('LOGIN_THROTTLE_EMAIL_RATE', default='5/min'),
         'upload': env('UPLOAD_THROTTLE_RATE', default='60/hour'),
+        'whatsapp_send': env('WHATSAPP_SEND_THROTTLE_RATE', default='60/hour'),
+        'whatsapp_webhook': env('WHATSAPP_WEBHOOK_THROTTLE_RATE', default='1200/min'),
     },
 }
 if DEBUG:
@@ -296,6 +299,19 @@ EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = env('EMAIL_USE_TLS', default=True, cast=bool)
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='webmaster@localhost')
+
+
+# ---------------------------------------------------------------------------
+# WhatsApp Business Platform (optional; click-to-chat needs none of this)
+# ---------------------------------------------------------------------------
+# Secrets live only here (environment / host secret manager): never in the database, the images or React.
+WHATSAPP_ACCESS_TOKEN = env('WHATSAPP_ACCESS_TOKEN', default='')        # system-user token from Meta
+WHATSAPP_APP_SECRET = env('WHATSAPP_APP_SECRET', default='')            # signs webhook payloads (X-Hub-Signature-256)
+WHATSAPP_VERIFY_TOKEN = env('WHATSAPP_VERIFY_TOKEN', default='')        # your own random string for webhook setup
+WHATSAPP_API_VERSION = env('WHATSAPP_API_VERSION', default='v23.0')
+WHATSAPP_GRAPH_BASE_URL = env('WHATSAPP_GRAPH_BASE_URL', default='https://graph.facebook.com')
+WHATSAPP_HTTP_TIMEOUT = env('WHATSAPP_HTTP_TIMEOUT', default=10, cast=int)
+WHATSAPP_EVENT_RETENTION_DAYS = env('WHATSAPP_EVENT_RETENTION_DAYS', default=30, cast=int)
 
 
 # ---------------------------------------------------------------------------

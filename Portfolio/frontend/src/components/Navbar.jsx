@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
-import { MagneticButton } from './MagneticButton';
+import { CtaLink } from './CtaLink';
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -39,18 +39,16 @@ export const Navbar = () => {
             <a
               key={link.label}
               href={link.href}
-              className="group relative text-sm font-medium text-slate-300 transition-colors duration-300 hover:text-white"
+              className="group relative py-2 text-sm font-medium text-slate-300 transition-colors duration-300 hover:text-white"
             >
               {link.label}
-              <span className="absolute -bottom-3 left-1/2 h-1 w-1 -translate-x-1/2 scale-0 rounded-full bg-sky-300 transition-transform duration-300 group-hover:scale-100" />
+              <span className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 scale-0 rounded-full bg-sky-300 transition-transform duration-300 group-hover:scale-100" />
             </a>
           ))}
         </div>
 
         <div className="hidden lg:block">
-          <MagneticButton href="/contact" className="interactive rounded-md border border-sky-200/40 bg-sky-300 px-5 py-3 text-sm font-bold !text-slate-950 shadow-[0_0_36px_rgba(56,189,248,0.22)] transition-colors hover:bg-sky-200 hover:!text-slate-950">
-            Start a Project
-          </MagneticButton>
+          <CtaLink primary href="/contact" className="navbar-cta">Start a Project</CtaLink>
         </div>
 
         <button

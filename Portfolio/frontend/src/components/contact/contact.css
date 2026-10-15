@@ -82,6 +82,11 @@
 .contact-status svg { color: var(--ct-cyan); }
 .contact-status-dot { position: relative; width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 10px rgb(74 222 128 / 55%); }
 
+/* ---------- WhatsApp option ---------- */
+.contact-whatsapp { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.contact-whatsapp .wa-note { flex-basis: 100%; margin: 0; }
+.contact-whatsapp-number { color: var(--ct-body); font: 500 14px/1 var(--font-hero-mono); letter-spacing: 0.02em; }
+
 /* ---------- Form ---------- */
 .contact-form-panel {
   position: relative; padding: 28px; border: 1px solid var(--ct-line); border-radius: 18px;

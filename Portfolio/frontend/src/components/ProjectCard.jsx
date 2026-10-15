@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { useContent } from '../content/hooks';
+import { fillTemplate } from '../lib/whatsapp';
+import { WhatsAppLink } from './whatsapp/WhatsAppLink';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -8,6 +11,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 export const ProjectCard = ({ project, index }) => {
   const cardRef = useRef(null);
+  const { whatsapp } = useContent();
   const imageRef = useRef(null);
   const contentRef = useRef(null);
 
@@ -121,6 +125,12 @@ export const ProjectCard = ({ project, index }) => {
             </span>
           ))}
         </div>
+        {whatsapp?.enabled && whatsapp.show_project_buttons && (
+          <WhatsAppLink phone={whatsapp.phone} className="wa-button mt-6"
+                        text={fillTemplate(whatsapp.project_message_template, { title: project.title, url: project.projectUrl })}>
+            Ask about this project
+          </WhatsAppLink>
+        )}
       </div>
     </motion.article>
   );

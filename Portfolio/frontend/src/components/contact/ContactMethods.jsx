@@ -1,5 +1,6 @@
 import { ArrowUpRight, Mail, MapPin, Phone } from 'lucide-react';
 import { useContent } from '../../content/hooks';
+import { WhatsAppLink } from '../whatsapp/WhatsAppLink';
 
 const MethodLink = ({ href, icon: Icon, label, value, external }) => (
   <a
@@ -17,7 +18,8 @@ const MethodLink = ({ href, icon: Icon, label, value, external }) => (
 );
 
 export const ContactMethods = () => {
-  const { contact, socialLinks } = useContent();
+  const { contact, socialLinks, whatsapp } = useContent();
+  const showWhatsApp = whatsapp?.enabled && whatsapp.show_contact_button;
   const { email, phone, location, availability } = contact;
   const socials = socialLinks.filter((link) => link.href);
 
@@ -31,6 +33,16 @@ export const ContactMethods = () => {
           <li><MethodLink href={`tel:${phone.replace(/[^\d+]/g, '')}`} icon={Phone} label="Phone" value={phone} /></li>
         )}
       </ul>
+
+      {showWhatsApp && (
+        <div className="contact-whatsapp">
+          <WhatsAppLink phone={whatsapp.phone} text={whatsapp.default_greeting} className="wa-button">
+            Chat on WhatsApp
+          </WhatsAppLink>
+          {whatsapp.display_phone && <span className="contact-whatsapp-number">{whatsapp.display_phone}</span>}
+          <p className="wa-note">Opens WhatsApp with a ready-made message you can edit before sending. Prefer email? Use the form.</p>
+        </div>
+      )}
 
       {socials.length > 0 && (
         <ul className="contact-socials" aria-label="Profiles">

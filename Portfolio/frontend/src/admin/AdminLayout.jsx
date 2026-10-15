@@ -19,7 +19,7 @@ const NAV = [
   { to: '/admin/technologies', label: 'Technology stack', icon: Boxes },
   { to: '/admin/media', label: 'Media library', icon: Image },
   { group: 'Administration', admin: true },
-  { to: '/admin/inquiries', label: 'Inquiries', icon: Inbox, admin: true },
+  { to: '/admin/whatsapp', label: 'Leads & WhatsApp', icon: Inbox, admin: true },
   { to: '/admin/settings', label: 'Site settings', icon: Settings, admin: true },
   { to: '/admin/users', label: 'Users', icon: UserCog, admin: true },
   { to: '/admin/activity', label: 'Activity log', icon: Activity, admin: true },
@@ -44,7 +44,7 @@ export const AdminLayout = ({ adminOnly = false }) => {
 
   return (
     <div className="lg:grid lg:grid-cols-[260px_1fr]">
-      <aside className={`fixed inset-y-0 left-0 z-[120] flex w-[260px] flex-col border-r border-white/10 bg-[#060a12] transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-[120] flex w-[260px] flex-col border-r border-white/10 bg-[#060a12] transition-[transform,visibility] lg:sticky lg:top-0 lg:h-screen lg:visible lg:translate-x-0 ${open ? 'visible translate-x-0' : 'invisible -translate-x-full'}`}>
         <div className="flex items-center justify-between px-5 py-4">
           <img src={logoUrl} alt="DevSphere" className="h-12 w-auto" />
           <button type="button" className="admin-btn admin-btn-sm lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu"><X size={16} /></button>

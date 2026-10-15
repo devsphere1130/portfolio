@@ -161,6 +161,9 @@
 .hero-content-cta-secondary::after { content: ""; position: absolute; inset: 1px; background: #0a1521; border-radius: 8px; }
 .hero-content-cta-secondary:is(:hover, :focus-visible)::before { opacity: 1; animation-play-state: running; }
 .hero-content-cta-secondary:hover svg { transform: translate(2px, -2px); }
+/* Compact variant for the navbar. */
+.navbar-cta .hero-content-cta { min-height: 46px; padding: 0 20px; font-weight: 700; }
+.navbar-cta .hero-content-cta > span { gap: 10px; }
 
 .hero-content-founder { display: flex; align-items: center; gap: 14px; margin-top: 24px; padding: 14px; border: 1px solid rgb(120 200 255 / 12%); border-radius: 12px; background: linear-gradient(110deg, rgb(255 255 255 / 4%), rgb(255 255 255 / 1.5%)); backdrop-filter: blur(16px); box-shadow: inset 0 1px 0 rgb(255 255 255 / 3%); }
 .hero-content-founder-person { display: flex; align-items: center; gap: 12px; flex: 1 1 auto; min-width: 0; }

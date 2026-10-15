@@ -27,6 +27,7 @@ Open http://localhost:5173 (site) and http://localhost:5173/admin (dashboard).
 
 - **[docs/SETUP.md](docs/SETUP.md)** — setup with or without Docker, admin accounts, editing content, media,
   email, production deployment (Vercel or containers), backups, troubleshooting, security notes.
+- **[docs/WHATSAPP.md](docs/WHATSAPP.md)** — WhatsApp click-to-chat, lead management and the optional Cloud API.
 - **[docs/CMS_CHECKLIST.md](docs/CMS_CHECKLIST.md)** — architecture decisions and the verified build checklist.
 
 ## API overview
@@ -43,5 +44,6 @@ Open http://localhost:5173 (site) and http://localhost:5173/admin (dashboard).
 ## Tests
 
 ```bash
-docker compose exec backend python manage.py test     # 44 tests, against PostgreSQL
+docker compose exec backend python manage.py test     # backend tests, against PostgreSQL
+cd frontend && npm test                               # frontend unit tests
 ```

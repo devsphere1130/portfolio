@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
+import { useContent } from '../../content/hooks';
+import { fillTemplate } from '../../lib/whatsapp';
+import { WhatsAppLink } from '../whatsapp/WhatsAppLink';
 import { formatItemNumber } from './formatItemNumber';
 import { SectionLabel } from './SectionLabel';
 
@@ -13,6 +16,7 @@ const DEFAULT_NOTE = 'Every project is different. We agree on the exact features
 // Rendered inside <AnimatePresence>.
 export const DetailPanel = ({ items, activeIndex, onSelect, onClose, onContact, kind, backLabel, children }) => {
   const item = items[activeIndex];
+  const { whatsapp } = useContent();
   const noun = kind.toLowerCase();
   const dialogRef = useRef(null);
   const scrollRef = useRef(null);
@@ -145,6 +149,12 @@ export const DetailPanel = ({ items, activeIndex, onSelect, onClose, onContact, 
                 Discuss Your Project
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </button>
+              {whatsapp?.enabled && whatsapp.show_project_buttons && (
+                <WhatsAppLink phone={whatsapp.phone} className="wa-button !min-h-[52px] !px-6"
+                              text={fillTemplate(whatsapp.capability_message_template, { title: item.title })}>
+                  Ask on WhatsApp
+                </WhatsAppLink>
+              )}
               <button
                 type="button"
                 onClick={onClose}

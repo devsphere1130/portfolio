@@ -2,10 +2,14 @@ import { forwardRef, useEffect, useId, useRef, useState } from 'react';
 import { AlertCircle, ArrowRight, CheckCircle2, ChevronDown, Loader2 } from 'lucide-react';
 import { budgetOptions, contactMessages, serviceOptions } from '../../data/contact';
 import { useContent } from '../../content/hooks';
+import { fillTemplate } from '../../lib/whatsapp';
+import { WhatsAppLink } from '../whatsapp/WhatsAppLink';
 import { submitInquiry } from '../../lib/contactApi';
 
-const EMPTY = { name: '', email: '', company: '', service: '', budget: '', details: '', website: '' };
-const FIELD_ORDER = ['name', 'email', 'company', 'service', 'budget', 'details'];
+const EMPTY = { name: '', email: '', company: '', phone_number: '', service: '', budget: '', details: '', website: '' };
+const FIELD_ORDER = ['name', 'email', 'company', 'phone_number', 'service', 'budget', 'details'];
+// Optional, international format (matches the server's E.164 check).
+const PHONE_PATTERN = /^\+?[1-9]\d{7,14}$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const DETAILS_MIN = 20;
 const DETAILS_MAX = 5000;
@@ -15,6 +19,8 @@ const validate = (values) => {
   if (values.name.trim().length < 2) errors.name = 'Please enter your name.';
   if (!values.email.trim()) errors.email = 'Please enter your email.';
   else if (!EMAIL_PATTERN.test(values.email.trim())) errors.email = 'Please enter a valid email address, like you@company.com.';
+  const phone = values.phone_number.replace(/[\s().-]/g, '').replace(/^00/, '+');
+  if (phone && !PHONE_PATTERN.test(phone)) errors.phone_number = 'Use the international format with country code, e.g. +91 98765 43210.';
   if (!values.service) errors.service = 'Please choose what you need. "Something Else" is fine if you are unsure.';
   if (!values.details.trim()) errors.details = 'Please tell us a little about your project.';
   else if (values.details.trim().length < DETAILS_MIN) errors.details = `Please add a little more detail (at least ${DETAILS_MIN} characters).`;
@@ -40,7 +46,7 @@ const Field = ({ id, label, optional, error, hint, children }) => (
 
 export const InquiryForm = forwardRef(function InquiryForm(_, firstFieldRef) {
   const formId = useId();
-  const { contact: contactDetails } = useContent();
+  const { contact: contactDetails, whatsapp } = useContent();
   const [values, setValues] = useState(EMPTY);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -154,6 +160,19 @@ export const InquiryForm = forwardRef(function InquiryForm(_, firstFieldRef) {
         <CheckCircle2 className="contact-success-icon" aria-hidden="true" />
         <h2 ref={successRef} tabIndex={-1} className="contact-success-title">Inquiry received</h2>
         <p className="contact-success-copy">{contactMessages.success}</p>
+        {whatsapp?.enabled && whatsapp.show_after_form_button && (
+          // Optional extra channel. The inquiry is already saved; this only opens WhatsApp if they choose to.
+          <div>
+            <WhatsAppLink phone={whatsapp.phone} className="wa-button"
+                          text={fillTemplate(whatsapp.after_form_message_template, {
+                            name: values.name.trim(),
+                            service: serviceOptions.find((o) => o.value === values.service)?.label,
+                          })}>
+              Continue on WhatsApp
+            </WhatsAppLink>
+            <p className="wa-note">Optional. Your inquiry is already saved; WhatsApp opens with a message you can review before sending.</p>
+          </div>
+        )}
         <button type="button" onClick={reset} className="contact-link-button">
           Send another inquiry
         </button>
@@ -181,6 +200,11 @@ export const InquiryForm = forwardRef(function InquiryForm(_, firstFieldRef) {
 
         <Field id={id('company')} label="Company or Business" optional error={errors.company}>
           <input {...inputProps('company')} type="text" autoComplete="organization" placeholder="Company name, if applicable" maxLength={160} className="contact-input" />
+        </Field>
+
+        <Field id={id('phone_number')} label="WhatsApp or phone" optional error={errors.phone_number}
+               hint="Include the country code. Only used to reply to this inquiry.">
+          <input {...inputProps('phone_number', true)} type="tel" inputMode="tel" autoComplete="tel" placeholder="+91 98765 43210" maxLength={24} className="contact-input" />
         </Field>
 
         <Field id={id('service')} label="What Do You Need?" error={errors.service}>

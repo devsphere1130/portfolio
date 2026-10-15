@@ -10,6 +10,7 @@ urlpatterns = [
     path('api/', include('accounts.urls')),
     path('api/', include('cms.urls')),
     path('api/', include('portfolio.urls')),
+    path('api/', include('whatsapp.urls')),
 ]
 
 handler404 = 'cms.exceptions.json_not_found'

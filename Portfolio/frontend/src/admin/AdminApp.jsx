@@ -7,7 +7,10 @@ import { ResourcePage } from './components/ResourcePage';
 import { AccountPage } from './pages/AccountPage';
 import { ActivityPage } from './pages/ActivityPage';
 import { DashboardPage } from './pages/DashboardPage';
-import { InquiriesPage } from './pages/InquiriesPage';
+import { LeadsTab } from './pages/whatsapp/LeadsTab';
+import { OverviewTab } from './pages/whatsapp/OverviewTab';
+import { SettingsTab } from './pages/whatsapp/SettingsTab';
+import { WhatsAppSection } from './pages/whatsapp/WhatsAppSection';
 import { LoginPage } from './pages/LoginPage';
 import { MediaPage } from './pages/MediaPage';
 import { PageEditor, PagesPage } from './pages/PagesPage';
@@ -34,7 +37,12 @@ const AdminApp = () => (
             <Route path="account" element={<AccountPage />} />
           </Route>
           <Route element={<AdminLayout adminOnly />}>
-            <Route path="inquiries" element={<InquiriesPage />} />
+            <Route path="whatsapp" element={<WhatsAppSection />}>
+              <Route index element={<OverviewTab />} />
+              <Route path="inquiries" element={<LeadsTab />} />
+              <Route path="settings" element={<SettingsTab />} />
+            </Route>
+            <Route path="inquiries" element={<Navigate to="/admin/whatsapp/inquiries" replace />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="activity" element={<ActivityPage />} />

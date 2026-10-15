@@ -61,3 +61,6 @@ class ContactInquiryView(APIView):
         except Exception:
             # The inquiry is already saved; a mail outage must not lose it or fail the request.
             logger.exception("Could not send notification email for inquiry %s", inquiry.id)
+
+
+            

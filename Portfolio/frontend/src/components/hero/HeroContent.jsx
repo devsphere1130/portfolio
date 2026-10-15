@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import { CtaLink } from '../CtaLink';
 import { pick, useSection } from '../../content/hooks';
 
 const EASE = [0.22, 1, 0.36, 1];
@@ -79,35 +79,6 @@ function RotatingService({ reduced, active, words: SERVICES }) {
   );
 }
 
-function HeroLink({ primary = false, enabled, children, href }) {
-  const x = useSpring(0, { stiffness: 220, damping: 30 });
-  const y = useSpring(0, { stiffness: 220, damping: 30 });
-  const reset = () => { x.set(0); y.set(0); };
-  const move = (event) => {
-    if (!primary || !enabled || event.pointerType === 'touch') return;
-    // Measure the stationary slot so the moving button cannot chase its own bounds.
-    const bounds = event.currentTarget.parentElement.getBoundingClientRect();
-    x.set(Math.max(-8, Math.min(8, ((event.clientX - bounds.left) / bounds.width - 0.5) * 16)));
-    y.set(Math.max(-8, Math.min(8, ((event.clientY - bounds.top) / bounds.height - 0.5) * 16)));
-  };
-
-  return (
-    <span className="hero-content-cta-slot">
-      <motion.a
-        href={href}
-        className={`interactive hero-content-cta ${primary ? 'hero-content-cta-primary' : 'hero-content-cta-secondary'}`}
-        style={{ x: enabled ? x : 0, y: enabled ? y : 0 }}
-        onPointerMove={move}
-        onPointerLeave={reset}
-        onPointerCancel={reset}
-        onFocus={reset}
-      >
-        <span>{children}{primary ? <ArrowRight size={18} aria-hidden="true" /> : <ArrowUpRight size={16} aria-hidden="true" />}</span>
-      </motion.a>
-    </span>
-  );
-}
-
 export const HeroContent = () => {
   const hero = useSection('home', 'hero');
   const brand = pick(hero, 'brand', 'DevSphere');
@@ -115,7 +86,7 @@ export const HeroContent = () => {
   const taglineHighlight = pick(hero, 'tagline_highlight', 'in orbit.');
   const words = pick(hero, 'rotating_words', SERVICES);
   const chips = pick(hero, 'chips', CAPABILITIES);
-  const primaryCta = pick(hero, 'primary_cta', { label: 'Start a Project', href: '#contact' });
+  const primaryCta = pick(hero, 'primary_cta', { label: 'Start a Project', href: '/contact' });
   const secondaryCta = pick(hero, 'secondary_cta', { label: 'View Our Work', href: '#work' });
   const statusItems = pick(hero, 'status_items', ['Available for new projects', 'Based in India', 'Working worldwide']);
   const founder = {
@@ -219,8 +190,8 @@ export const HeroContent = () => {
         </ul>
 
         <motion.div className="hero-content-actions" {...reveal(0.68)}>
-          <HeroLink primary enabled={parallax} href={primaryCta.href || '#contact'}>{primaryCta.label || 'Start a Project'}</HeroLink>
-          <HeroLink enabled={parallax} href={secondaryCta.href || '#work'}>{secondaryCta.label || 'View Our Work'}</HeroLink>
+          <CtaLink primary enabled={parallax} href={primaryCta.href || '/contact'}>{primaryCta.label || 'Start a Project'}</CtaLink>
+          <CtaLink enabled={parallax} href={secondaryCta.href || '#work'}>{secondaryCta.label || 'View Our Work'}</CtaLink>
         </motion.div>
       </DepthLayer>
 

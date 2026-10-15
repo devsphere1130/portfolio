@@ -7,7 +7,7 @@ import { Field } from './Fields';
 import { slugify, toPayload } from '../forms';
 
 export const FormGrid = ({ fields, values, errors, onChange }) => (
-  <div className="grid gap-5 sm:grid-cols-2">
+  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
     {fields.map((field) => (
       <Field key={field.name} field={field} value={values[field.name]} error={errors[field.name]} onChange={onChange} />
     ))}

@@ -19,12 +19,12 @@ export const Footer = () => {
 
           <div>
             <h4 className="mb-4 font-semibold text-white">Navigation</h4>
-            <ul className="space-y-2">
+            <ul className="space-y-0.5">
               {['Home', 'Work', 'Services', 'Stack', 'Contact'].map((link) => (
                 <li key={link}>
                   <a
                     href={link === 'Contact' ? '/contact' : `/#${link.toLowerCase()}`}
-                    className="text-sm text-slate-400 transition-colors hover:text-white"
+                    className="inline-block py-2 text-sm text-slate-400 transition-colors hover:text-white"
                   >
                     {link}
                   </a>
@@ -35,12 +35,12 @@ export const Footer = () => {
 
           <div>
             <h4 className="mb-4 font-semibold text-white">Services</h4>
-            <ul className="space-y-2">
+            <ul className="space-y-0.5">
               {['Web Apps', 'SaaS', 'Backend API', 'Modernization'].map((service) => (
                 <li key={service}>
                   <a
                     href="/#services"
-                    className="text-sm text-slate-400 transition-colors hover:text-white"
+                    className="inline-block py-2 text-sm text-slate-400 transition-colors hover:text-white"
                   >
                     {service}
                   </a>
@@ -51,10 +51,10 @@ export const Footer = () => {
 
           <div>
             <h4 className="mb-4 font-semibold text-white">Get in Touch</h4>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1">
               <a
                 href={`mailto:${contactDetails.email}`}
-                className="flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-white"
+                className="flex items-center gap-2 py-2 text-sm text-slate-400 transition-colors hover:text-white"
               >
                 <Mail size={16} />
                 <span>{contactDetails.email}</span>
@@ -63,7 +63,7 @@ export const Footer = () => {
                 <div className="flex flex-wrap gap-4">
                   {socialLinks.map((link) => (
                     <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer"
-                       className="text-sm font-semibold text-slate-400 transition-colors hover:text-white">
+                       className="inline-block py-2 text-sm font-semibold text-slate-400 transition-colors hover:text-white">
                       {link.label}
                     </a>
                   ))}
@@ -73,12 +73,9 @@ export const Footer = () => {
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 md:flex-row">
+        <div className="border-t border-white/10 pt-8 text-center">
           <p className="text-sm text-slate-500">
             Copyright {currentYear} {site?.site_name || 'devsphere'}. All rights reserved.
-          </p>
-          <p className="text-sm text-slate-500">
-            Designed & engineered with React + Django
           </p>
         </div>
       </div>

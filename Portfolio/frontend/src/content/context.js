@@ -19,6 +19,8 @@ export const FALLBACK = {
   technologies: technologiesData,
   projects: projectsData,
   team: staticTeam,
+  // Off until the API confirms a configured number: never show a button that could open the wrong chat.
+  whatsapp: { enabled: false },
 };
 
 export const ContentContext = createContext(FALLBACK);

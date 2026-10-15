@@ -1,16 +1,13 @@
 import { useCallback, useRef } from 'react';
-import { ArrowRight } from 'lucide-react';
-import { MagneticButton } from '../components/MagneticButton';
-import { pick, useContent, useSection } from '../content/hooks';
+import { CtaLink } from '../components/CtaLink';
+import { pick, useSection } from '../content/hooks';
 import { usePointerFollow } from '../hooks/usePointerFollow';
 
 export const FinalCTA = () => {
   const glowRef = useRef(null);
-  const { contact } = useContent();
   const section = useSection('home', 'cta');
-  const mailto = `mailto:${contact.email}`;
-  const primary = pick(section, 'primary_cta', { label: 'Start a Project', href: mailto });
-  const secondary = pick(section, 'secondary_cta', { label: "Let's Talk", href: mailto });
+  const primary = pick(section, 'primary_cta', { label: 'Start a Project', href: '/contact' });
+  const secondary = pick(section, 'secondary_cta', { label: "Let's Talk", href: '/contact' });
 
   // Shift the spotlight up to ~8% of the section with the pointer, via transform (no re-renders).
   // The layer is 120% of the section, so 6.67% of its own size equals 8% of the section.
@@ -40,14 +37,9 @@ export const FinalCTA = () => {
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-400">
             {pick(section, 'description', 'Let us turn it into software that works for real users, real operations and real business goals.')}
           </p>
-          <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-            <MagneticButton href={primary.href || mailto} className="interactive rounded-md border border-sky-200/40 bg-sky-300 px-7 py-4 font-bold !text-slate-950 hover:bg-sky-200 hover:!text-slate-950">
-              {primary.label || 'Start a Project'}
-              <ArrowRight size={19} />
-            </MagneticButton>
-            <MagneticButton href={secondary.href || mailto} className="interactive rounded-md border border-white/15 px-7 py-4 font-bold text-white hover:border-sky-300/50 hover:bg-white/[0.04]">
-              {secondary.label || "Let's Talk"}
-            </MagneticButton>
+          <div className="final-cta-actions mt-10 flex flex-col justify-center gap-4 sm:flex-row">
+            <CtaLink primary href={primary.href || '/contact'}>{primary.label || 'Start a Project'}</CtaLink>
+            <CtaLink href={secondary.href || '/contact'}>{secondary.label || "Let's Talk"}</CtaLink>
           </div>
         </div>
       </div>

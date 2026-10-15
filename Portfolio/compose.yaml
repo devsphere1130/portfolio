@@ -1,3 +1,4 @@
+
 # DevSphere — local development stack.
 #   docker compose up --build          start everything (frontend :5173, API :8000, Postgres :5433)
 #   docker compose up db               only Postgres (run Django/Vite on the host instead)

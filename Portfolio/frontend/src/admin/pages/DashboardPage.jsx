@@ -33,7 +33,7 @@ export const DashboardPage = () => {
         <Stat label="Pages / sections" value={`${data.pages.total} / ${data.pages.sections}`}
               sub={data.pages.with_unpublished_changes ? `${data.pages.with_unpublished_changes} page(s) with unpublished changes` : 'All pages published'} to="/admin/pages" />
         {isAdmin
-          ? <Stat label="New inquiries" value={data.inquiries.new} sub={`${data.inquiries.total} total`} to="/admin/inquiries" />
+          ? <Stat label="New inquiries" value={data.inquiries.new} sub={`${data.inquiries.total} total`} to="/admin/whatsapp/inquiries" />
           : <Stat label="Media library" value={data.media.total} sub="images" to="/admin/media" />}
         <Stat label="Capabilities" value={data.capabilities.published} sub={pub('capabilities')} to="/admin/capabilities" />
         <Stat label="Services" value={data.services.published} sub={pub('services')} to="/admin/services" />

@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ContentProvider } from './content/ContentProvider';
 import { PreviewBanner } from './content/PreviewBanner';
+import { FloatingWhatsApp } from './components/whatsapp/FloatingWhatsApp';
 import { About } from './pages/About';
 import { Contact } from './pages/Contact';
 import { Home } from './pages/Home';
@@ -14,6 +15,7 @@ const AdminApp = lazy(() => import('./admin/AdminApp'));
 const PublicSite = ({ children }) => (
   <ContentProvider>
     {children}
+    <FloatingWhatsApp />
     <PreviewBanner />
   </ContentProvider>
 );

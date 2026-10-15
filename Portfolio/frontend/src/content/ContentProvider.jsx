@@ -22,6 +22,7 @@ export const ContentProvider = ({ children }) => {
         technologies: toTechGroups(data.technologies),
         projects: data.projects.map(toProject),
         team: data.team.map(toTeamMember),
+        whatsapp: data.whatsapp || { enabled: false },
       }))
       .catch((error) => {
         if (error.name !== 'AbortError') console.warn('Content API unavailable; showing bundled content.', error.message);

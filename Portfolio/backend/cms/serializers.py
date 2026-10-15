@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from portfolio.models import ContactInquiry
+from accounts.models import User
+from portfolio.models import ContactInquiry, InquiryNote
 
 from . import validation
 from .models import (
@@ -238,14 +239,48 @@ class TechnologyItemSerializer(ContentSerializer):
 
 
 class InquirySerializer(serializers.ModelSerializer):
+    """Admin-only lead record. Visitor-supplied fields are read-only; admins manage the lead fields."""
+
+    EDITABLE = ['lead_status', 'assigned_to', 'follow_up_at', 'last_contacted_at']
+
     service_label = serializers.CharField(source='get_service_display', read_only=True)
     budget_label = serializers.CharField(source='get_budget_display', read_only=True)
+    lead_status_label = serializers.CharField(source='get_lead_status_display', read_only=True)
+    source_label = serializers.CharField(source='get_inquiry_source_display', read_only=True)
+    assigned_to = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_active=True), allow_null=True, required=False)
+    assigned_to_name = serializers.CharField(source='assigned_to.name', read_only=True, default=None)
+    related_project = serializers.SerializerMethodField()
+    related_capability = serializers.SerializerMethodField()
+    note_count = serializers.IntegerField(source='notes.count', read_only=True)
 
     class Meta:
         model = ContactInquiry
-        fields = ['id', 'name', 'email', 'company', 'service', 'service_label', 'budget', 'budget_label', 'details',
-                  'status', 'created_at', 'updated_at']
-        read_only_fields = [f for f in fields if f != 'status']
+        fields = ['id', 'name', 'email', 'company', 'phone_number', 'service', 'service_label', 'budget', 'budget_label',
+                  'details', 'inquiry_source', 'source_label', 'related_project', 'related_capability', 'lead_status',
+                  'lead_status_label', 'assigned_to', 'assigned_to_name', 'last_contacted_at', 'follow_up_at',
+                  'note_count', 'created_at', 'updated_at']
+        read_only_fields = [f for f in fields if f not in ('lead_status', 'assigned_to', 'follow_up_at', 'last_contacted_at')]
+
+    def get_related_project(self, obj):
+        return {'slug': obj.related_project.slug, 'title': obj.related_project.title} if obj.related_project_id else None
+
+    def get_related_capability(self, obj):
+        return {'slug': obj.related_capability.slug, 'title': obj.related_capability.title} if obj.related_capability_id else None
+
+
+class InquiryNoteSerializer(serializers.ModelSerializer):
+    author_name = serializers.CharField(source='author.name', read_only=True, default=None)
+
+    class Meta:
+        model = InquiryNote
+        fields = ['id', 'body', 'author_name', 'created_at']
+        read_only_fields = ['id', 'author_name', 'created_at']
+
+    def validate_body(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError('Write something first.')
+        return validation.no_html(value)
 
 
 class AuditLogSerializer(serializers.ModelSerializer):

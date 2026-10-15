@@ -2,6 +2,7 @@
 @import "./components/hero/hero-content.css";
 @import "./components/about/about.css";
 @import "./components/contact/contact.css";
+@import "./components/whatsapp/whatsapp.css";
 
 html {
   background: #05070a;
@@ -62,4 +63,44 @@ a:focus-visible {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ---------- Large screens ----------
+   Containers are px-capped and much of the hero is sized in px, so on 1920+ monitors the site would sit in a
+   narrow column with small type. Widen the containers and scale the type in two steps.
+   `html` raises specificity above the component stylesheets, which load later. */
+@media (min-width: 1920px) {
+  html { font-size: 112.5%; }
+  html .section-shell, html .contact-shell { width: min(100% - 6rem, 1440px); }
+  html .about-shell { width: min(100% - 96px, 1500px); }
+  html .hero-content-layout { width: min(calc(100% - 96px), 1480px); }  /* keeps the copy clear of the ribbon */
+  html .hero-content { max-width: 640px; }
+  html .hero-content-brand { font-size: clamp(48px, 20cqi, 128px); }
+  html .hero-content-value { font-size: 40px; }
+  html .hero-content-description { max-width: 560px; }
+  html .hero-content-description > p:first-child { font-size: 20px; }
+  html .hero-content-chip { height: 40px; font-size: 13px; }
+  html .hero-content-cta { min-height: 56px; padding: 0 28px; font-size: 15px; }
+  html .hero-content-founder-person strong { font-size: 15px; line-height: 22px; }
+  html .hero-content-founder-stats dt { font-size: 11px; }
+  html .hero-content-founder-stats dd { font-size: 16px; line-height: 22px; }
+  html .hero-content-eyebrow { font-size: 11px; }
+}
+@media (min-width: 2400px) {
+  html { font-size: 125%; }
+  html .section-shell, html .contact-shell { width: min(100% - 8rem, 1720px); }
+  html .about-shell { width: min(100% - 128px, 1800px); }
+  html .hero-content-layout { width: min(calc(100% - 128px), 2040px); }
+  html .hero-content { max-width: 760px; }
+  html .hero-content-brand { font-size: clamp(48px, 20cqi, 152px); }
+  html .hero-content-value { font-size: 48px; }
+  html .hero-content-description { max-width: 660px; }
+  html .hero-content-description > p:first-child { font-size: 23px; }
+  html .hero-content-chip { height: 44px; padding-inline: 16px; font-size: 15px; }
+  html .hero-content-cta { min-height: 62px; padding: 0 32px; font-size: 17px; }
+  html .hero-content-founder-person strong { font-size: 17px; line-height: 24px; }
+  html .hero-content-founder-person p > span { font-size: 13px; }
+  html .hero-content-founder-stats dt { font-size: 13px; line-height: 18px; }
+  html .hero-content-founder-stats dd { font-size: 19px; line-height: 26px; }
+  html .hero-content-eyebrow { font-size: 13px; line-height: 24px; }
 }
