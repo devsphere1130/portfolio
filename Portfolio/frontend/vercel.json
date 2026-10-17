@@ -6,15 +6,15 @@
       "destination": "https://devsphere-api.onrender.com/api/$1"
     },
     {
-      "source": "/work/([a-z0-9-]+)/?",
+      "source": "/work/:slug",
       "has": [
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i).*(facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|skypeuripreview|pinterest|redditbot|embedly|iframely|applebot).*"
+          "value": ".*([Ff]acebookexternalhit|[Ff]acebot|[Tt]witterbot|[Ll]inked[Ii]n[Bb]ot|[Ss]lackbot|[Dd]iscordbot|[Tt]elegram[Bb]ot|[Ww]hats[Aa]pp|[Ss]kype[Uu]ri[Pp]review|[Pp]interest|[Rr]edditbot|[Ee]mbedly|[Ii]framely|[Aa]pplebot).*"
         }
       ],
-      "destination": "https://devsphere-api.onrender.com/api/public/share/work/$1/"
+      "destination": "https://devsphere-api.onrender.com/api/public/share/work/:slug/"
     },
     { "source": "/((?!assets/).*)", "destination": "/index.html" }
   ],
