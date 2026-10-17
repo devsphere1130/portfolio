@@ -79,14 +79,14 @@ class DeployCheckTests(SimpleTestCase):
 
     @override_settings(IS_PRODUCTION=True, ALLOWED_HOSTS=['localhost'], CSRF_TRUSTED_ORIGINS=['http://www.example.com'],
                        SESSION_COOKIE_SECURE=False, SESSION_COOKIE_SAMESITE='None', MEDIA_STORAGE='local',
-                       EMAIL_BACKEND='django.core.mail.backends.console.EmailBackend')
+                       EMAIL_BACKEND='django.core.mail.backends.console.EmailBackend', PUBLIC_SITE_URL='')
     def test_risky_production_settings_are_reported(self):
         found = self.ids(checks.environment_checks, checks.media_and_email_checks)
         self.assertEqual(found, {'devsphere.W002', 'devsphere.W003', 'devsphere.W004', 'devsphere.E001',
-                                 'devsphere.W020', 'devsphere.W021'})
+                                 'devsphere.W020', 'devsphere.W021', 'devsphere.W022'})
 
     @override_settings(IS_PRODUCTION=True, ALLOWED_HOSTS=['www.example.com'], CSRF_TRUSTED_ORIGINS=['https://www.example.com'],
                        SESSION_COOKIE_SECURE=True, SESSION_COOKIE_SAMESITE='Lax', MEDIA_STORAGE='s3',
-                       EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend')
+                       EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend', PUBLIC_SITE_URL='https://www.example.com')
     def test_good_production_settings_pass(self):
         self.assertEqual(self.ids(checks.environment_checks, checks.media_and_email_checks), set())

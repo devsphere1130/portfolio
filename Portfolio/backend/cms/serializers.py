@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.utils import model_meta
 
 from accounts.models import User
 from portfolio.models import ContactInquiry, InquiryNote
@@ -11,7 +12,6 @@ from .models import (
     Page,
     PageSection,
     Project,
-    ProjectMedia,
     Service,
     SiteSettings,
     TeamMember,
@@ -83,6 +83,21 @@ class ContentSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError({key: exc.detail}) from exc
                 attrs[key] = value.strip()
         return super().validate(attrs)
+
+    def update(self, instance, validated_data):
+        """Write only the submitted columns, so a concurrent change (e.g. a reorder) to other fields is never undone."""
+        relations = model_meta.get_field_info(instance).relations
+        many = {k: validated_data.pop(k) for k in list(validated_data) if k in relations and relations[k].to_many}
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        fields = list(validated_data)
+        if fields:
+            if hasattr(instance, 'updated_at'):
+                fields.append('updated_at')
+            instance.save(update_fields=fields)
+        for key, value in many.items():
+            getattr(instance, key).set(value)
+        return instance
 
 
 PUBLISH_READONLY = ['id', 'status', 'published_at', 'created_at', 'updated_at']
@@ -169,29 +184,41 @@ class PageSerializer(ContentSerializer):
         read_only_fields = ['id', 'status', 'published_at', 'content_updated_at', 'created_at', 'updated_at']
 
 
-class ProjectMediaSerializer(ContentSerializer):
-    media_asset = MediaField(allow_null=False, required=True)
-
-    class Meta:
-        model = ProjectMedia
-        fields = ['id', 'project', 'media_asset', 'caption', 'alt_text', 'display_order', 'created_at']
-        read_only_fields = ['id', 'created_at']
-        validators = [serializers.UniqueTogetherValidator(
-            queryset=ProjectMedia.objects.all(), fields=['project', 'media_asset'],
-            message='That image is already in this project gallery.',
-        )]
-
-
 class ProjectSerializer(ContentSerializer):
     cover_media = MediaField()
-    gallery = ProjectMediaSerializer(many=True, read_only=True)
+    hero_media = MediaField()
+    thumbnail_media = MediaField()
+    problem_media = MediaField()
+    approach_media = MediaField()
+    solution_media = MediaField()
+    outcome_media = MediaField()
+    related_projects = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all(), many=True, required=False)
+    section_counts = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
-        fields = ['id', 'slug', 'title', 'category', 'short_description', 'description', 'problem_statement', 'solution',
-                  'outcome', 'technologies', 'project_url', 'repository_url', 'cover_media', 'gallery', 'is_featured',
-                  'display_order', 'started_at', 'completed_at', 'status', 'published_at', 'created_at', 'updated_at']
+        fields = ['id', 'slug', 'title', 'category', 'status_label', 'short_description', 'description', 'overview', 'audience',
+                  'problem_statement', 'approach', 'solution', 'outcome', 'technologies', 'project_url', 'repository_url',
+                  'repository_public', 'client_name', 'show_client_name', 'project_role', 'project_duration',
+                  'cover_media', 'hero_media', 'thumbnail_media', 'problem_media', 'approach_media', 'solution_media',
+                  'outcome_media', 'related_projects', 'seo_title', 'seo_description', 'is_featured', 'display_order',
+                  'started_at', 'completed_at', 'section_counts', 'status', 'published_at', 'created_at', 'updated_at']
         read_only_fields = PUBLISH_READONLY
+
+    def get_section_counts(self, obj):
+        """How many items each optional section has (published / total), for the editor's tab badges."""
+        counts = {}
+        for name in ('gallery', 'videos', 'build_components', 'features', 'outcomes', 'stack'):
+            rows = getattr(obj, name).all()
+            counts[name] = {'total': len(rows), 'published': sum(1 for r in rows if r.is_published)}
+        return counts
+
+    def validate_related_projects(self, value):
+        if len(value) > 6:
+            raise serializers.ValidationError('Choose at most 6 related projects.')
+        if self.instance and any(p.pk == self.instance.pk for p in value):
+            raise serializers.ValidationError('A project cannot be related to itself.')
+        return value
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
@@ -303,21 +330,21 @@ class PublicMediaMixin:
 
 
 class PublicProjectSerializer(PublicMediaMixin, serializers.ModelSerializer):
+    """Card fields for the Work listing. The full case study comes from the detail endpoint."""
+
     cover = serializers.SerializerMethodField()
-    gallery = serializers.SerializerMethodField()
+    repository_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
-        fields = ['slug', 'title', 'category', 'short_description', 'description', 'problem_statement', 'solution',
-                  'outcome', 'technologies', 'project_url', 'repository_url', 'cover', 'gallery', 'is_featured',
-                  'started_at', 'completed_at']
+        fields = ['slug', 'title', 'category', 'status_label', 'short_description', 'description', 'problem_statement',
+                  'technologies', 'project_url', 'repository_url', 'cover', 'is_featured', 'started_at', 'completed_at']
 
     def get_cover(self, obj):
-        return self.media(obj.cover_media)
+        return self.media(obj.thumbnail_media or obj.cover_media)
 
-    def get_gallery(self, obj):
-        return [{**self.media(item.media_asset), 'caption': item.caption, 'alt_text': item.alt_text or item.media_asset.alt_text}
-                for item in obj.gallery.all()]
+    def get_repository_url(self, obj):
+        return obj.repository_url if obj.repository_public else ''
 
 
 class PublicTeamMemberSerializer(PublicMediaMixin, serializers.ModelSerializer):

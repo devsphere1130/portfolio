@@ -7,4 +7,4 @@ class CmsConfig(AppConfig):
     verbose_name = 'Content'
 
     def ready(self):
-        from . import checks  # noqa: F401  (registers `manage.py check --deploy` rules)
+        from . import checks, signals  # noqa: F401  (registers `check --deploy` rules and file cleanup)

@@ -122,9 +122,14 @@ export const Pagination = ({ page, count, pageSize = 20, onPage }) => {
   );
 };
 
-export const StatusBadge = ({ status }) => (
-  <span className={`admin-badge ${status === 'published' ? 'admin-badge-published' : 'admin-badge-draft'}`}>
-    <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
-    {status === 'published' ? 'Published' : 'Draft'}
-  </span>
-);
+const STATUS = { published: ['admin-badge-published', 'Published'], archived: ['admin-badge-muted', 'Archived'], draft: ['admin-badge-draft', 'Draft'] };
+
+export const StatusBadge = ({ status }) => {
+  const [tone, label] = STATUS[status] || STATUS.draft;
+  return (
+    <span className={`admin-badge ${tone}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
+      {label}
+    </span>
+  );
+};

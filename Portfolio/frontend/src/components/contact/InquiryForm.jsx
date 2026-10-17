@@ -46,7 +46,9 @@ const Field = ({ id, label, optional, error, hint, children }) => (
 
 export const InquiryForm = forwardRef(function InquiryForm(_, firstFieldRef) {
   const formId = useId();
-  const { contact: contactDetails, whatsapp } = useContent();
+  const { contact: contactDetails, whatsapp, projects } = useContent();
+  // Arriving from a case study (/contact?project=<slug>) links the inquiry to that published project.
+  const relatedProject = projects.find((p) => p.slug === new URLSearchParams(window.location.search).get('project'));
   const [values, setValues] = useState(EMPTY);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -100,7 +102,7 @@ export const InquiryForm = forwardRef(function InquiryForm(_, firstFieldRef) {
     setServerMessage('');
     try {
       const payload = Object.fromEntries(Object.entries(values).map(([key, value]) => [key, value.trim()]));
-      const result = await submitInquiry(payload);
+      const result = await submitInquiry(relatedProject ? { ...payload, related_project: relatedProject.slug } : payload);
       if (result.ok) {
         setStatus('success');
         return;
@@ -188,6 +190,7 @@ export const InquiryForm = forwardRef(function InquiryForm(_, firstFieldRef) {
         <p className="contact-form-kicker">Project inquiry</p>
         <p className="contact-form-note"><span className="contact-required" aria-hidden="true">*</span> Required</p>
       </div>
+      {relatedProject && <p className="contact-form-related">About: <strong>{relatedProject.title}</strong></p>}
 
       <div className="contact-form-grid">
         <Field id={id('name')} label="Full Name" error={errors.name}>

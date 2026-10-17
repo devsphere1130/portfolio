@@ -17,7 +17,9 @@ from whatsapp.models import WhatsAppConfiguration
 from whatsapp.serializers import PublicWhatsAppSerializer
 
 from . import pages as page_service
+from . import project_views
 from .audit import record
+from .pagination import StandardPagination
 from .media import process_image
 from .models import (
     AuditLog,
@@ -26,7 +28,7 @@ from .models import (
     Page,
     PageSection,
     Project,
-    ProjectMedia,
+    ProjectStatus,
     Service,
     SiteSettings,
     Status,
@@ -42,7 +44,6 @@ from .serializers import (
     MediaUploadSerializer,
     PageSectionSerializer,
     PageSerializer,
-    ProjectMediaSerializer,
     ProjectSerializer,
     PublicCapabilitySerializer,
     PublicProjectSerializer,
@@ -96,7 +97,7 @@ class PublishableViewSet(AuditedModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         wanted = self.request.query_params.get('status')
-        if wanted in Status.values:
+        if wanted in dict(queryset.model._meta.get_field('status').choices):
             queryset = queryset.filter(status=wanted)
         return queryset
 
@@ -141,38 +142,24 @@ class ProjectViewSet(PublishableViewSet):
     serializer_class = ProjectSerializer
     entity_type = 'project'
     search_fields = ['title', 'slug', 'category', 'short_description']
+    queryset = Project.objects.all()
 
     def get_queryset(self):
-        queryset = super().get_queryset().select_related('cover_media').prefetch_related('gallery__media_asset')
+        queryset = super().get_queryset().select_related(
+            'cover_media', 'hero_media', 'thumbnail_media', 'problem_media', 'approach_media', 'solution_media', 'outcome_media',
+        ).prefetch_related('related_projects', 'gallery', 'videos', 'build_components', 'features', 'outcomes', 'stack')
         if self.request.query_params.get('featured') == 'true':
             queryset = queryset.filter(is_featured=True)
         return queryset
 
-    queryset = Project.objects.all()
-
-
-class ProjectMediaViewSet(AuditedModelViewSet):
-    serializer_class = ProjectMediaSerializer
-    entity_type = 'project_media'
-    queryset = ProjectMedia.objects.select_related('media_asset', 'project')
-    pagination_class = None
-
-    def get_queryset(self):
-        project = self.request.query_params.get('project')
-        return self.queryset.filter(project_id=project) if project else self.queryset
-
-    def perform_create(self, serializer):
-        obj = serializer.save()
-        record(self.request.user, 'project_media.added', 'project', obj.project_id, f'Added an image to “{obj.project}”', request=self.request)
-
-    def perform_update(self, serializer):
-        obj = serializer.save()
-        record(self.request.user, 'project_media.updated', 'project', obj.project_id, f'Updated a gallery image on “{obj.project}”', request=self.request)
-
-    def perform_destroy(self, instance):
-        project, project_id = str(instance.project), instance.project_id
-        instance.delete()
-        record(self.request.user, 'project_media.removed', 'project', project_id, f'Removed an image from “{project}”', request=self.request)
+    @action(detail=True, methods=['post'])
+    def archive(self, request, pk=None):
+        project = self.get_object()
+        project.archive()
+        project.updated_by = request.user
+        project.save(update_fields=['status', 'updated_by', 'updated_at'])
+        record(request.user, 'project.archived', 'project', project.pk, f'Archived “{project.title}”', request=request)
+        return Response(self.get_serializer(project).data)
 
 
 class TeamMemberViewSet(PublishableViewSet):
@@ -530,7 +517,7 @@ class PublicContentView(PublicView):
             rendered = public_page(page, request, preview)
             if rendered:
                 pages[page.slug] = rendered
-        projects = published(Project.objects.select_related('cover_media').prefetch_related('gallery__media_asset'), preview)
+        projects = published(Project.objects.exclude(status=ProjectStatus.ARCHIVED).select_related('cover_media', 'thumbnail_media'), preview)
         data = {
             'preview': preview,
             'site': PublicSiteSettingsSerializer(SiteSettings.load(), context=ctx).data,
@@ -555,17 +542,25 @@ class PublicPageView(PublicView):
 
 
 class PublicProjectListView(PublicView):
+    """Card data for every published project. `?page=` / `?page_size=` paginate when given."""
+
     def get(self, request):
         preview = is_preview(request)
-        projects = published(Project.objects.select_related('cover_media').prefetch_related('gallery__media_asset'), preview)
+        projects = published(Project.objects.exclude(status=ProjectStatus.ARCHIVED).select_related('cover_media', 'thumbnail_media'), preview)
+        if 'page' in request.query_params:
+            paginator = StandardPagination()
+            page = paginator.paginate_queryset(projects, request, view=self)
+            response = paginator.get_paginated_response(PublicProjectSerializer(page, many=True, context={'request': request}).data)
+            return cache_headers(response, preview)
         return cache_headers(Response(PublicProjectSerializer(projects, many=True, context={'request': request}).data), preview)
 
 
 class PublicProjectDetailView(PublicView):
+    """The full case study: the project plus its published gallery, videos, features and so on."""
+
     def get(self, request, slug):
         preview = is_preview(request)
-        project = get_object_or_404(published(Project.objects.all(), preview), slug=slug)
-        return cache_headers(Response(PublicProjectSerializer(project, context={'request': request}).data), preview)
+        return cache_headers(Response(project_views.case_study(request, slug, preview)), preview)
 
 
 def public_list_view(model, serializer, select=()):

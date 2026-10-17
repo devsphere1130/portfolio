@@ -1,36 +1,19 @@
-import { ProjectGallery } from './components/ProjectGallery';
-
 const slugField = { name: 'slug', label: 'URL slug', required: true, hint: 'Lowercase words and hyphens. Filled in from the title for new items.', full: false };
 const order = { name: 'display_order', label: 'Display order', type: 'number', hint: 'Lower numbers show first (or use the arrows in the list).', full: false };
 
 export const RESOURCES = {
   projects: {
+    // Projects have a full-page case-study editor (pages/projects/ProjectEditor.jsx) instead of the drawer.
     title: 'Projects', singular: 'Project', endpoint: '/admin/projects/', titleKey: 'title', publishable: true, reorderable: true,
-    previewPath: '/projects', wide: true, Extra: ProjectGallery,
-    description: 'Case studies shown in Selected Work (featured first) and on the Projects page.',
+    previewPath: '/projects', editPath: (row) => `/admin/projects/${row ? row.id : 'new'}`, statuses: ['published', 'draft', 'archived'],
+    description: 'Case studies: the Work section (featured first), the Projects page and each project’s page at /work/<slug>.',
     columns: [
       { key: 'title', label: 'Title' },
       { key: 'category', label: 'Category' },
       { key: 'is_featured', label: 'Featured', render: (r) => (r.is_featured ? <span className="admin-badge admin-badge-new">Featured</span> : '—') },
+      { key: 'media', label: 'Media', render: (r) => `${r.section_counts.gallery.published} images · ${r.section_counts.videos.published} videos` },
     ],
-    defaults: { technologies: [], is_featured: false, display_order: 0 },
-    fields: [
-      { name: 'title', label: 'Title', required: true, full: false }, slugField,
-      { name: 'category', label: 'Category', placeholder: 'e.g. SaaS Platform', full: false },
-      { name: 'is_featured', label: 'Featured', type: 'boolean', checkboxLabel: 'Feature on the homepage', full: false },
-      { name: 'cover_media', label: 'Cover image', type: 'media', hint: 'Shown on the project card. Without one, a branded placeholder is used.' },
-      { name: 'short_description', label: 'Short description', type: 'textarea', rows: 2, maxLength: 300 },
-      { name: 'problem_statement', label: 'Challenge', type: 'textarea', rows: 3, hint: 'Shown as “Challenge” on the card.' },
-      { name: 'description', label: 'What was built', type: 'textarea', rows: 4, hint: 'Shown as “Built” on the card.' },
-      { name: 'solution', label: 'Solution (case study)', type: 'textarea', rows: 3 },
-      { name: 'outcome', label: 'Outcome (case study)', type: 'textarea', rows: 3, hint: 'Only real, verifiable results.' },
-      { name: 'technologies', label: 'Technologies', type: 'list', placeholder: 'e.g. React' },
-      { name: 'project_url', label: 'Live project URL', type: 'url', placeholder: 'https://…', full: false },
-      { name: 'repository_url', label: 'Repository URL', type: 'url', placeholder: 'https://…', full: false },
-      { name: 'started_at', label: 'Started', type: 'date', full: false },
-      { name: 'completed_at', label: 'Completed', type: 'date', full: false },
-      order,
-    ],
+    fields: [],
   },
   team: {
     title: 'Team', singular: 'Team member', endpoint: '/admin/team/', titleKey: 'name', publishable: true, reorderable: true, previewPath: '/about',

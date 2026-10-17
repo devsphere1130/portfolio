@@ -11,6 +11,9 @@ import './App.css';
 
 // The dashboard is its own chunk: public visitors never download it.
 const AdminApp = lazy(() => import('./admin/AdminApp'));
+// Case studies load on demand, so the listing pages stay light.
+const CaseStudy = lazy(() => import('./pages/CaseStudy'));
+const PageFallback = () => <div className="min-h-screen bg-[#05070a]" />;
 
 const PublicSite = ({ children }) => (
   <ContentProvider>
@@ -28,9 +31,10 @@ function App() {
         <Route path="/about" element={<PublicSite><About /></PublicSite>} />
         <Route path="/contact" element={<PublicSite><Contact /></PublicSite>} />
         <Route path="/projects" element={<PublicSite><Projects /></PublicSite>} />
+        <Route path="/work/:slug" element={<PublicSite><Suspense fallback={<PageFallback />}><CaseStudy /></Suspense></PublicSite>} />
         <Route
           path="/admin/*"
-          element={<Suspense fallback={<div className="min-h-screen bg-[#05070a]" />}><AdminApp /></Suspense>}
+          element={<Suspense fallback={<PageFallback />}><AdminApp /></Suspense>}
         />
       </Routes>
     </BrowserRouter>

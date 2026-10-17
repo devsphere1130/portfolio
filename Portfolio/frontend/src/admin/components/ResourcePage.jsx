@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ArrowDown, ArrowUp, ExternalLink, Plus, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { useToast } from '../toastContext';
 import { Drawer, EmptyState, ErrorState, Pagination, Spinner, StatusBadge } from './Feedback';
@@ -23,7 +24,11 @@ export const ResourcePage = ({ config }) => {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [query, setQuery] = useState({ search: '', status: '', page: 1 });
-  const [editing, setEditing] = useState(null); // null | 'new' | item
+  const [editingState, setEditing] = useState(null); // null | 'new' | item
+  const navigate = useNavigate();
+  // Resources with their own editor page (config.editPath) navigate there instead of opening the drawer.
+  const editing = config.editPath ? null : editingState;
+  const edit = (item) => (config.editPath ? navigate(config.editPath(item === 'new' ? null : item)) : setEditing(item));
 
   const load = useCallback(async () => {
     setError(null);
@@ -65,7 +70,7 @@ export const ResourcePage = ({ config }) => {
           {config.previewPath && (
             <a className="admin-btn" href={`${config.previewPath}?preview=1`} target="_blank" rel="noreferrer"><ExternalLink size={15} />Preview site</a>
           )}
-          <button type="button" className="admin-btn admin-btn-primary" onClick={() => setEditing('new')}><Plus size={16} />New {config.singular}</button>
+          <button type="button" className="admin-btn admin-btn-primary" onClick={() => edit('new')}><Plus size={16} />New {config.singular}</button>
         </div>
       </header>
 
@@ -80,15 +85,14 @@ export const ResourcePage = ({ config }) => {
           <select className="admin-input w-auto" aria-label="Filter by status" value={query.status}
                   onChange={(e) => setQuery({ ...query, status: e.target.value, page: 1 })}>
             <option value="">All statuses</option>
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
+            {(config.statuses || ['published', 'draft']).map((s) => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
           </select>
         )}
       </div>
 
       {error ? <ErrorState error={error} onRetry={load} /> : data === null ? <Spinner /> : rows.length === 0 ? (
         <EmptyState title={query.search || query.status ? 'Nothing matches those filters.' : `No ${config.title.toLowerCase()} yet.`}
-                    action={!query.search && !query.status && <button type="button" className="admin-btn admin-btn-primary" onClick={() => setEditing('new')}><Plus size={16} />Create the first one</button>} />
+                    action={!query.search && !query.status && <button type="button" className="admin-btn admin-btn-primary" onClick={() => edit('new')}><Plus size={16} />Create the first one</button>} />
       ) : (
         <div className="admin-card overflow-x-auto">
           <table className="admin-table">
@@ -114,7 +118,7 @@ export const ResourcePage = ({ config }) => {
                   {config.columns.map((c, ci) => (
                     <td key={c.key}>
                       {ci === 0 ? (
-                        <button type="button" className="text-left font-semibold text-white hover:text-sky-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-300" onClick={() => setEditing(row)}>
+                        <button type="button" className="text-left font-semibold text-white hover:text-sky-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-300" onClick={() => edit(row)}>
                           {c.render ? c.render(row) : row[c.key] || '—'}
                         </button>
                       ) : (c.render ? c.render(row) : row[c.key] || <span className="text-slate-500">—</span>)}

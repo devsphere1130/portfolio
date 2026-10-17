@@ -70,3 +70,33 @@ export async function api(path, { method = 'GET', body, query, signal, retry = t
   if (!response.ok) throw new ApiError(response.status, data);
   return data;
 }
+
+/**
+ * Upload a file with progress (fetch can't report upload progress). `path` is an API path, or with
+ * `direct: true` an absolute URL from a signed storage form: then no cookies or CSRF token are sent and
+ * `fields` (the signed policy) must come before the file.
+ */
+export async function uploadWithProgress(path, file, { fields = {}, direct = false, onProgress, signal } = {}) {
+  const body = new FormData();
+  Object.entries(fields).forEach(([key, value]) => body.append(key, value));
+  body.append('file', file);
+  const csrf = direct ? null : await ensureCsrf();
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', direct ? path : `${API_BASE}${path}`);
+    xhr.withCredentials = !direct;
+    if (csrf) xhr.setRequestHeader('X-CSRFToken', csrf);
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.upload.onprogress = (event) => event.lengthComputable && onProgress?.(event.loaded / event.total);
+    xhr.onload = () => {
+      let data = null;
+      try { data = xhr.responseText ? JSON.parse(xhr.responseText) : null; } catch { data = null; }
+      if (xhr.status >= 200 && xhr.status < 300) resolve(data);
+      else reject(new ApiError(xhr.status, data || { detail: direct ? 'The storage service rejected the upload.' : undefined }));
+    };
+    xhr.onerror = () => reject(new ApiError(0, { detail: 'The upload failed. Check your connection and try again.' }));
+    xhr.onabort = () => reject(new ApiError(0, { detail: 'Upload cancelled.' }));
+    signal?.addEventListener('abort', () => xhr.abort());
+    xhr.send(body);
+  });
+}

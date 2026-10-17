@@ -30,6 +30,16 @@ export const ContentProvider = ({ children }) => {
     return () => controller.abort();
   }, []);
 
+  // A favicon chosen in Site settings replaces the bundled one (index.html) for this visit.
+  const faviconUrl = content.site?.favicon?.thumbnail_url || content.site?.favicon?.url;
+  useEffect(() => {
+    if (!faviconUrl) return;
+    for (const link of document.head.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]')) {
+      link.href = faviconUrl;
+      link.removeAttribute('type');
+    }
+  }, [faviconUrl]);
+
   return <ContentContext.Provider value={content}>{children}</ContentContext.Provider>;
 };
 

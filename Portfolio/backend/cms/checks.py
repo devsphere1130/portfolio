@@ -69,6 +69,10 @@ def media_and_email_checks(app_configs, **kwargs):
         issues.append(Warning('Uploaded images are stored on this server\'s disk (MEDIA_STORAGE=local).',
                               hint='Fine with a persistent volume (compose.prod.yaml); on platforms that wipe the disk on '
                                    'redeploy use MEDIA_STORAGE=s3.', id='devsphere.W020'))
+    if not settings.PUBLIC_SITE_URL:
+        issues.append(Warning('PUBLIC_SITE_URL is not set.',
+                              hint='Set it to the website origin (e.g. https://devsphere.dev) so case-study link previews '
+                                   'use the right canonical URL.', id='devsphere.W022'))
     if settings.EMAIL_BACKEND.endswith(('console.EmailBackend', 'locmem.EmailBackend', 'dummy.EmailBackend')):
         issues.append(Warning('Emails are not really sent (console/locmem email backend).',
                               hint='Set the SMTP EMAIL_* values to receive contact form notifications.', id='devsphere.W021'))

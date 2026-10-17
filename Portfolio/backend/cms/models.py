@@ -205,58 +205,6 @@ class PageSection(TrackedModel):
 
 
 # ---------------------------------------------------------------------------
-# Projects
-# ---------------------------------------------------------------------------
-
-class Project(PublishableModel):
-    slug = models.SlugField(max_length=120, unique=True, validators=[slug_validator])
-    title = models.CharField(max_length=200)
-    category = models.CharField(max_length=80, blank=True)
-    short_description = models.CharField(max_length=300, blank=True)
-    description = models.TextField(blank=True, max_length=5000)
-    problem_statement = models.TextField(blank=True, max_length=3000)
-    solution = models.TextField(blank=True, max_length=3000)
-    outcome = models.TextField(blank=True, max_length=3000)
-    technologies = models.JSONField(default=list, blank=True)
-    project_url = models.URLField(blank=True)
-    repository_url = models.URLField(blank=True)
-    cover_media = models.ForeignKey(MediaAsset, on_delete=models.PROTECT, null=True, blank=True, related_name='project_covers')
-    is_featured = models.BooleanField(default=False, db_index=True)
-    started_at = models.DateField(null=True, blank=True)
-    completed_at = models.DateField(null=True, blank=True)
-
-    class Meta(PublishableModel.Meta):
-        db_table = 'projects'
-        constraints = [
-            models.CheckConstraint(
-                condition=Q(completed_at__isnull=True) | Q(started_at__isnull=True) | Q(completed_at__gte=models.F('started_at')),
-                name='projects_dates_in_order',
-            )
-        ]
-
-    def __str__(self):
-        return self.title
-
-
-class ProjectMedia(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='gallery')
-    media_asset = models.ForeignKey(MediaAsset, on_delete=models.PROTECT, related_name='project_gallery')
-    caption = models.CharField(max_length=300, blank=True)
-    alt_text = models.CharField(max_length=300, blank=True)
-    display_order = models.PositiveIntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'project_media'
-        ordering = ['display_order', 'created_at']
-        constraints = [models.UniqueConstraint(fields=['project', 'media_asset'], name='project_media_unique')]
-
-    def __str__(self):
-        return f'{self.project} · {self.media_asset}'
-
-
-# ---------------------------------------------------------------------------
 # Team, capabilities, services, technology
 # ---------------------------------------------------------------------------
 
@@ -340,6 +288,240 @@ class TechnologyItem(PublishableModel):
 
     def __str__(self):
         return f'{self.category}: {self.name}'
+
+
+# ---------------------------------------------------------------------------
+# Projects and case studies
+# ---------------------------------------------------------------------------
+
+class ProjectStatus(models.TextChoices):
+    DRAFT = 'draft', 'Draft'
+    PUBLISHED = 'published', 'Published'
+    ARCHIVED = 'archived', 'Archived'
+
+
+class Project(PublishableModel):
+    """A case study. Only `published` projects are public; archived ones are kept but hidden like drafts."""
+
+    status = models.CharField(max_length=16, choices=ProjectStatus.choices, default=ProjectStatus.DRAFT, db_index=True)
+    slug = models.SlugField(max_length=120, unique=True, validators=[slug_validator])
+    title = models.CharField(max_length=200)
+    category = models.CharField(max_length=80, blank=True)
+    status_label = models.CharField(max_length=40, blank=True, help_text='Optional badge, e.g. "Live" or "In development".')
+    short_description = models.CharField(max_length=300, blank=True)
+    description = models.TextField(blank=True, max_length=5000, help_text='"Built" text on the project card and hero intro.')
+    overview = models.TextField(blank=True, max_length=8000, help_text='Case-study overview. Blank lines separate paragraphs.')
+    audience = models.TextField(blank=True, max_length=1000, help_text='Who it was built for.')
+    problem_statement = models.TextField(blank=True, max_length=3000)
+    approach = models.TextField(blank=True, max_length=3000)
+    solution = models.TextField(blank=True, max_length=3000)
+    outcome = models.TextField(blank=True, max_length=3000)
+    technologies = models.JSONField(default=list, blank=True, help_text='Short badge list for cards and the hero.')
+    project_url = models.URLField(blank=True)
+    repository_url = models.URLField(blank=True)
+    repository_public = models.BooleanField(default=False, help_text='Show the repository link publicly.')
+    client_name = models.CharField(max_length=160, blank=True)
+    show_client_name = models.BooleanField(default=False, help_text='The client approved being named publicly.')
+    project_role = models.CharField(max_length=160, blank=True)
+    project_duration = models.CharField(max_length=80, blank=True)
+    cover_media = models.ForeignKey(MediaAsset, on_delete=models.PROTECT, null=True, blank=True, related_name='project_covers')
+    hero_media = models.ForeignKey(MediaAsset, on_delete=models.PROTECT, null=True, blank=True, related_name='project_heroes')
+    thumbnail_media = models.ForeignKey(MediaAsset, on_delete=models.PROTECT, null=True, blank=True, related_name='project_thumbnails')
+    problem_media = models.ForeignKey(MediaAsset, on_delete=models.PROTECT, null=True, blank=True, related_name='project_problem_images')
+    approach_media = models.ForeignKey(MediaAsset, on_delete=models.PROTECT, null=True, blank=True, related_name='project_approach_images')
+    solution_media = models.ForeignKey(MediaAsset, on_delete=models.PROTECT, null=True, blank=True, related_name='project_solution_images')
+    outcome_media = models.ForeignKey(MediaAsset, on_delete=models.PROTECT, null=True, blank=True, related_name='project_outcome_images')
+    related_projects = models.ManyToManyField('self', symmetrical=False, blank=True, related_name='related_from')
+    seo_title = models.CharField(max_length=70, blank=True)
+    seo_description = models.CharField(max_length=180, blank=True)
+    is_featured = models.BooleanField(default=False, db_index=True)
+    started_at = models.DateField(null=True, blank=True)
+    completed_at = models.DateField(null=True, blank=True)
+
+    class Meta(PublishableModel.Meta):
+        db_table = 'projects'
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(completed_at__isnull=True) | Q(started_at__isnull=True) | Q(completed_at__gte=models.F('started_at')),
+                name='projects_dates_in_order',
+            )
+        ]
+
+    def __str__(self):
+        return self.title
+
+    def archive(self):
+        self.status = ProjectStatus.ARCHIVED
+
+
+class ProjectChild(models.Model):
+    """An optional case-study item. Each is shown only while both it and its project are published."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    display_order = models.PositiveIntegerField(default=0)
+    is_published = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+        ordering = ['display_order', 'created_at']
+
+
+class ProjectMedia(ProjectChild):
+    """A gallery image."""
+
+    class Category(models.TextChoices):
+        FEATURE = 'feature', 'Feature image'
+        DESKTOP = 'desktop', 'Desktop screen'
+        MOBILE = 'mobile', 'Mobile screen'
+        DASHBOARD = 'dashboard', 'Dashboard'
+        WORKFLOW = 'workflow', 'Workflow'
+        BEFORE = 'before', 'Before'
+        AFTER = 'after', 'After'
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='gallery')
+    media_asset = models.ForeignKey(MediaAsset, on_delete=models.PROTECT, related_name='project_gallery')
+    caption = models.CharField(max_length=300, blank=True)
+    alt_text = models.CharField(max_length=300, blank=True)
+    category = models.CharField(max_length=16, choices=Category.choices, blank=True)
+
+    class Meta(ProjectChild.Meta):
+        db_table = 'project_media'
+        constraints = [models.UniqueConstraint(fields=['project', 'media_asset'], name='project_media_unique')]
+        indexes = [models.Index(fields=['project', 'display_order'], name='project_media_order_idx')]
+
+    def __str__(self):
+        return f'{self.project} · {self.media_asset}'
+
+
+def video_upload_to(instance, filename):
+    return f'videos/{timezone.now():%Y/%m}/{uuid.uuid4().hex}.mp4'
+
+
+def captions_upload_to(instance, filename):
+    return f'videos/{timezone.now():%Y/%m}/{uuid.uuid4().hex}.vtt'
+
+
+class ProjectVideo(ProjectChild):
+    """A demo or walkthrough. Uploaded files live in media storage, never in the database."""
+
+    class Source(models.TextChoices):
+        UPLOAD = 'upload', 'Uploaded file'
+        YOUTUBE = 'youtube', 'YouTube'
+        VIMEO = 'vimeo', 'Vimeo'
+
+    class State(models.TextChoices):
+        AWAITING_UPLOAD = 'awaiting_upload', 'Waiting for the file'
+        READY = 'ready', 'Ready'
+        FAILED = 'failed', 'Failed validation'
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='videos')
+    title = models.CharField(max_length=160)
+    description = models.TextField(blank=True, max_length=1000)
+    source_type = models.CharField(max_length=16, choices=Source.choices, default=Source.UPLOAD)
+    video_file = models.FileField(upload_to=video_upload_to, max_length=255, blank=True)
+    external_url = models.URLField(blank=True)
+    external_id = models.CharField(max_length=64, blank=True)
+    poster_media = models.ForeignKey(MediaAsset, on_delete=models.PROTECT, null=True, blank=True, related_name='video_posters')
+    captions_file = models.FileField(upload_to=captions_upload_to, max_length=255, blank=True)
+    captions_language = models.CharField(max_length=12, default='en')
+    captions_label = models.CharField(max_length=40, default='English')
+    is_primary = models.BooleanField(default=False)
+    is_published = models.BooleanField(default=False)
+    processing_status = models.CharField(max_length=20, choices=State.choices, default=State.AWAITING_UPLOAD)
+    failure_reason = models.CharField(max_length=300, blank=True)
+    pending_key = models.CharField(max_length=255, blank=True, help_text='Storage key of a direct upload that is not verified yet.')
+    mime_type = models.CharField(max_length=40, blank=True)
+    file_size_bytes = models.PositiveBigIntegerField(null=True, blank=True)
+    duration_seconds = models.FloatField(null=True, blank=True)
+    width = models.PositiveIntegerField(null=True, blank=True)
+    height = models.PositiveIntegerField(null=True, blank=True)
+    video_codec = models.CharField(max_length=16, blank=True)
+    audio_codec = models.CharField(max_length=16, blank=True)
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+
+    class Meta(ProjectChild.Meta):
+        db_table = 'project_videos'
+        ordering = ['-is_primary', 'display_order', 'created_at']
+        constraints = [
+            models.UniqueConstraint(fields=['project'], condition=Q(is_primary=True), name='project_video_one_primary'),
+            models.CheckConstraint(condition=Q(is_published=False) | Q(processing_status='ready'), name='project_video_published_is_ready'),
+        ]
+
+    def __str__(self):
+        return f'{self.project} · {self.title}'
+
+    @property
+    def is_playable(self):
+        if self.processing_status != self.State.READY:
+            return False
+        return bool(self.video_file) if self.source_type == self.Source.UPLOAD else bool(self.external_id)
+
+
+class ProjectBuildComponent(ProjectChild):
+    """A piece of engineering work ("What we built")."""
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='build_components')
+    title = models.CharField(max_length=120)
+    summary = models.CharField(max_length=400)
+    details = models.TextField(blank=True, max_length=3000)
+    media = models.ForeignKey(MediaAsset, on_delete=models.PROTECT, null=True, blank=True, related_name='project_build_components')
+    video = models.ForeignKey(ProjectVideo, on_delete=models.SET_NULL, null=True, blank=True, related_name='build_components')
+
+    class Meta(ProjectChild.Meta):
+        db_table = 'project_build_components'
+
+    def __str__(self):
+        return self.title
+
+
+class ProjectFeature(ProjectChild):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='features')
+    title = models.CharField(max_length=120)
+    description = models.CharField(max_length=500, blank=True)
+    icon_key = models.CharField(max_length=40, blank=True)
+    media = models.ForeignKey(MediaAsset, on_delete=models.PROTECT, null=True, blank=True, related_name='project_features')
+
+    class Meta(ProjectChild.Meta):
+        db_table = 'project_features'
+
+    def __str__(self):
+        return self.title
+
+
+class ProjectOutcome(ProjectChild):
+    """A documented result. It can only be published once someone has confirmed it is verified."""
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='outcomes')
+    label = models.CharField(max_length=120)
+    metric_value = models.CharField(max_length=40, blank=True, help_text='e.g. "40%" or "3x". Leave blank for qualitative results.')
+    description = models.CharField(max_length=500, blank=True)
+    is_verified = models.BooleanField(default=False)
+    verification_note = models.CharField(max_length=300, blank=True, help_text='Internal only: how this was measured or who confirmed it.')
+    is_published = models.BooleanField(default=False)
+
+    class Meta(ProjectChild.Meta):
+        db_table = 'project_outcomes'
+        constraints = [models.CheckConstraint(condition=Q(is_published=False) | Q(is_verified=True), name='project_outcome_published_is_verified')]
+
+    def __str__(self):
+        return self.label
+
+
+class ProjectTechnology(ProjectChild):
+    """A technology from the shared stack, as used on this project."""
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='stack')
+    technology = models.ForeignKey(TechnologyItem, on_delete=models.CASCADE, related_name='project_uses')
+    note = models.CharField(max_length=200, blank=True, help_text='What it was used for on this project.')
+
+    class Meta(ProjectChild.Meta):
+        db_table = 'project_technologies'
+        constraints = [models.UniqueConstraint(fields=['project', 'technology'], name='project_technology_unique')]
+
+    def __str__(self):
+        return f'{self.project} · {self.technology.name}'
 
 
 # ---------------------------------------------------------------------------

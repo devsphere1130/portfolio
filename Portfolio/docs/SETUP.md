@@ -139,7 +139,7 @@ Rebuilding an image or recreating a container never touches data. Data lives in 
 | Dashboard area | Controls on the site |
 |---|---|
 | Pages & sections | hero, section headings, homepage CTA, About intro/team/closing, Contact intro/closing, Projects intro, SEO titles |
-| Projects | Selected Work (featured first) and `/projects` (+ gallery images) |
+| Projects | Selected Work (featured first), `/projects` and each case study at `/work/<slug>`: gallery, videos, features, outcomes and more (see [CASE_STUDIES.md](CASE_STUDIES.md)) |
 | Team | About page profiles and portraits |
 | Capabilities | the six “From complex ideas…” cards |
 | Services | the numbered strip under the hero |

@@ -14,6 +14,7 @@ import { WhatsAppSection } from './pages/whatsapp/WhatsAppSection';
 import { LoginPage } from './pages/LoginPage';
 import { MediaPage } from './pages/MediaPage';
 import { PageEditor, PagesPage } from './pages/PagesPage';
+import { ProjectEditor } from './pages/projects/ProjectEditor';
 import { SettingsPage } from './pages/SettingsPage';
 import { UsersPage } from './pages/UsersPage';
 import { RESOURCES } from './resources';
@@ -30,6 +31,7 @@ const AdminApp = () => (
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="pages" element={<PagesPage />} />
             <Route path="pages/:id" element={<PageEditor />} />
+            <Route path="projects/:id" element={<ProjectEditor />} />
             {Object.entries(RESOURCES).map(([path, config]) => (
               <Route key={path} path={path} element={<ResourcePage key={path} config={config} />} />
             ))}

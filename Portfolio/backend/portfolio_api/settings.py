@@ -257,6 +257,18 @@ if MEDIA_STORAGE == 's3':
 elif MEDIA_STORAGE != 'local':
     raise ImproperlyConfigured("MEDIA_STORAGE must be 'local' or 's3'.")
 
+# Project videos (see docs/CASE_STUDIES.md). Files go to the same storage as images, never the database.
+# With MEDIA_STORAGE=s3 the browser uploads straight to the bucket using a short-lived signed form;
+# with local storage the file is posted to Django (keep it modest and match nginx client_max_body_size).
+VIDEO_MAX_UPLOAD_MB = env('VIDEO_MAX_UPLOAD_MB', default=300, cast=int)
+VIDEO_MAX_DURATION_SECONDS = env('VIDEO_MAX_DURATION_SECONDS', default=1800, cast=int)
+VIDEO_MAX_WIDTH = env('VIDEO_MAX_WIDTH', default=3840, cast=int)
+VIDEO_MAX_HEIGHT = env('VIDEO_MAX_HEIGHT', default=2160, cast=int)
+VIDEO_DIRECT_UPLOAD_EXPIRY_SECONDS = env('VIDEO_DIRECT_UPLOAD_EXPIRY_SECONDS', default=900, cast=int)
+VIDEO_EXTERNAL_PROVIDERS = env('VIDEO_EXTERNAL_PROVIDERS', default='youtube,vimeo')  # '' disables links
+# Public origin of the website, used for canonical URLs and social previews (e.g. https://devsphere.dev).
+PUBLIC_SITE_URL = env('PUBLIC_SITE_URL', default='').rstrip('/')
+
 
 # ---------------------------------------------------------------------------
 # Django REST Framework
