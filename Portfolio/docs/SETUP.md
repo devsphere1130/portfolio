@@ -211,6 +211,9 @@ not really sent. With DEBUG off, cookies are `Secure` automatically, so serve ov
 
 ### Option A — Vercel frontend + container API + managed Postgres (simplest to run)
 
+> For **Vercel + Render + Neon + Cloudflare R2**, follow [DEPLOY.md](DEPLOY.md) instead: it proxies `/api` through
+> Vercel, so the cross-site cookie settings below are not needed.
+
 1. **Database:** a managed PostgreSQL service (Neon, Supabase, RDS, Render, …). Use its connection string
    as `DATABASE_URL` (add `?sslmode=require` if the provider needs it).
 2. **Media:** an S3-compatible bucket (AWS S3, Cloudflare R2, DigitalOcean Spaces) with public read on

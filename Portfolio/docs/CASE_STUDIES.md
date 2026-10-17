@@ -74,17 +74,18 @@ visitor presses play. The primary video is shown first, and other published vide
   Django (`…/videos/<id>/file/`) with a progress bar. In production nginx buffers the body to disk before passing
   it on (`client_max_body_size 320m` in `frontend/nginx.conf`; keep it a little above `VIDEO_MAX_UPLOAD_MB`).
   Files live in the media volume, never in PostgreSQL, so they survive container rebuilds.
-- **`MEDIA_STORAGE=s3`** (recommended in production): the server returns a **signed upload form** that is valid
-  for `VIDEO_DIRECT_UPLOAD_EXPIRY_SECONDS` (15 min). It is locked to one random key, `video/mp4` and the size
-  limit. The browser uploads straight to the bucket. Then the server reads the stored object with ranged
-  requests and validates it. Invalid objects are deleted. The bucket needs a CORS rule for the site's origin:
+- **`MEDIA_STORAGE=s3`** (recommended in production; AWS S3 or Cloudflare R2): the server returns a short-lived
+  **presigned PUT URL** (`VIDEO_DIRECT_UPLOAD_EXPIRY_SECONDS`, 15 min) for one random key, signed for `video/mp4`
+  and the file's exact size, so the bucket rejects anything else. The browser uploads straight to the bucket, then
+  the server reads the stored object with ranged requests and validates it; invalid objects are deleted. (PUT, not
+  a POST form, because R2 doesn't support presigned POST.) The bucket needs a CORS rule for the site's origin:
 
   ```json
-  [{ "AllowedOrigins": ["https://www.example.com"], "AllowedMethods": ["POST", "GET", "HEAD"],
-     "AllowedHeaders": ["*"], "ExposeHeaders": ["ETag"], "MaxAgeSeconds": 3000 }]
+  [{ "AllowedOrigins": ["https://www.example.com"], "AllowedMethods": ["PUT", "GET", "HEAD"],
+     "AllowedHeaders": ["Content-Type", "Cache-Control"], "MaxAgeSeconds": 3600 }]
   ```
-  `GET` is needed because caption files from another origin are loaded with CORS. Objects under `videos/`
-  must be publicly readable, the same as `media/`.
+  `GET` is needed because caption files from another origin are loaded with CORS. Objects must be publicly
+  readable through the bucket's public domain (`MEDIA_S3_CUSTOM_DOMAIN`), like images.
 
 ## Link previews and SEO
 
@@ -96,14 +97,8 @@ run JavaScript, so production nginx sends only those user agents to
 Set **`PUBLIC_SITE_URL`** (e.g. `https://www.example.com`) so those tags use the right canonical URL.
 `manage.py check --deploy` warns (`devsphere.W022`) when it is missing.
 
-**Vercel frontend:** add a user-agent rewrite in `frontend/vercel.json`, *before* the catch-all, pointing at
-your API domain:
-
-```json
-{ "source": "/work/:slug", "has": [{ "type": "header", "key": "user-agent",
-  "value": "(?i).*(facebookexternalhit|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp).*" }],
-  "destination": "https://api.example.com/api/public/share/work/:slug/" }
-```
+**Vercel frontend:** `frontend/vercel.json` already contains the same user-agent rule, pointing at the Render
+API (see [DEPLOY.md](DEPLOY.md)).
 
 ## API
 
@@ -146,8 +141,8 @@ HEVC, truncated files, limits). The S3 flow is tested against a mocked bucket cl
 
 - **"HEVC (H.265) video does not play in most browsers"**: re-export as H.264 (HandBrake preset *Fast 1080p30*,
   or `ffmpeg -i in.mov -c:v libx264 -crf 22 -c:a aac -movflags +faststart out.mp4`).
-- **Upload fails at ~10 MB in production**: you're probably hitting a proxy limit in front of nginx; raise it
+- **Upload fails at ~10 MB in production (local storage)**: you're probably hitting a proxy limit in front of nginx; raise it
   for `/api/admin/projects/*/videos/*/file/`.
-- **Direct upload fails immediately**: the bucket CORS rule is missing the site origin or `POST`.
+- **Direct upload fails immediately**: the bucket CORS rule is missing the site origin, `PUT`, or the `Content-Type`/`Cache-Control` headers.
 - **Captions don't appear (S3)**: CORS must allow `GET` from the site origin.
 - **A section is missing**: open the Publishing tab and check its count. Hidden items show *not published*.

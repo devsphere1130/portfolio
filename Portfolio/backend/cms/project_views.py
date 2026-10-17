@@ -151,8 +151,8 @@ class StackViewSet(ProjectChildViewSet):
 class VideoViewSet(ProjectChildViewSet):
     """
     Upload flow: create the video (title, source), then
-      POST <id>/upload/   -> {"mode": "server", "url": ...} or {"mode": "direct", "url", "fields"} (S3)
-      server mode: POST the file to <id>/file/     direct mode: POST to S3, then POST <id>/complete/
+      POST <id>/upload/ {"size": n} -> {"mode": "server", "url"} or {"mode": "direct", "method": "PUT", "url", "headers"}
+      server mode: POST the file to <id>/file/     direct mode: PUT it to the bucket URL, then POST <id>/complete/
     The video only becomes `ready` after the file has been stored and validated.
     """
 
@@ -230,22 +230,29 @@ class VideoViewSet(ProjectChildViewSet):
         limits = {'max_bytes': video_rules.max_upload_bytes(), 'accept': 'video/mp4'}
         if settings.MEDIA_STORAGE != 's3':
             return Response({'mode': 'server', 'url': f'/admin/projects/{video.project_id}/videos/{video.pk}/file/', **limits})
+        # Direct upload with a presigned PUT (S3 and Cloudflare R2; R2 has no presigned POST forms).
+        # The exact size is signed into the URL, so the bucket rejects any other length.
+        try:
+            size = int(request.data.get('size'))
+        except (TypeError, ValueError):
+            return Response({'size': ['Send the file size in bytes.']}, status=status.HTTP_400_BAD_REQUEST)
+        if not 32 <= size <= limits['max_bytes']:
+            return Response({'size': [f'Videos must be {settings.VIDEO_MAX_UPLOAD_MB} MB or smaller.']}, status=status.HTTP_400_BAD_REQUEST)
         storage = default_storage
         name = video_upload_to(video, 'upload.mp4')
-        key = storage._normalize_name(name)  # includes the storage location prefix, if any
-        client = storage.connection.meta.client
-        form = client.generate_presigned_post(
-            Bucket=storage.bucket_name, Key=key,
-            Fields={'Content-Type': 'video/mp4', 'Cache-Control': 'public, max-age=31536000, immutable'},
-            Conditions=[{'Content-Type': 'video/mp4'}, {'Cache-Control': 'public, max-age=31536000, immutable'},
-                        ['content-length-range', 32, limits['max_bytes']]],
+        headers = {'Content-Type': 'video/mp4', 'Cache-Control': 'public, max-age=31536000, immutable'}
+        url = storage.connection.meta.client.generate_presigned_url(
+            'put_object',
+            Params={'Bucket': storage.bucket_name, 'Key': storage._normalize_name(name),  # includes the location prefix
+                    'ContentType': headers['Content-Type'], 'CacheControl': headers['Cache-Control'], 'ContentLength': size},
             ExpiresIn=settings.VIDEO_DIRECT_UPLOAD_EXPIRY_SECONDS,
+            HttpMethod='PUT',
         )
         if video.pending_key:
             default_storage.delete(video.pending_key)
         video.pending_key = name
         video.save(update_fields=['pending_key', 'updated_at'])
-        return Response({'mode': 'direct', 'url': form['url'], 'fields': form['fields'], **limits})
+        return Response({'mode': 'direct', 'method': 'PUT', 'url': url, 'headers': headers, **limits})
 
     @action(detail=True, methods=['post'])
     def file(self, request, project_pk=None, pk=None):

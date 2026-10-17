@@ -11,14 +11,14 @@ const mb = (bytes) => (bytes ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : '');
 
 /**
  * 1. ask the server how to upload (/upload/): straight to object storage with a short-lived signed
- *    form, or to Django when media is stored locally; 2. send the file with progress; 3. for direct
+ *    PUT URL, or to Django when media is stored locally; 2. send the file with progress; 3. for direct
  *    uploads, ask the server to verify the stored object (/complete/). Only then is the video "ready".
  */
 async function sendVideoFile(projectId, videoId, file, onProgress) {
-  const plan = await api(childUrl(projectId, 'videos', videoId, 'upload'), { method: 'POST' });
+  const plan = await api(childUrl(projectId, 'videos', videoId, 'upload'), { method: 'POST', body: { size: file.size } });
   if (file.size > plan.max_bytes) throw new Error(`Videos must be ${Math.round(plan.max_bytes / 1024 / 1024)} MB or smaller.`);
   if (plan.mode === 'direct') {
-    await uploadWithProgress(plan.url, file, { fields: plan.fields, direct: true, onProgress });
+    await uploadWithProgress(plan.url, file, { direct: true, method: plan.method, headers: plan.headers, onProgress });
     return api(childUrl(projectId, 'videos', videoId, 'complete'), { method: 'POST' });
   }
   return uploadWithProgress(plan.url, file, { onProgress });

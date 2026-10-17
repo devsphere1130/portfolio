@@ -369,7 +369,7 @@ class DirectUploadTests(CaseStudyBase):
 
     def fake_storage(self, data):
         client = mock.Mock()
-        client.generate_presigned_post.return_value = {'url': 'https://bucket.example/', 'fields': {'key': 'k', 'policy': 'p'}}
+        client.generate_presigned_url.return_value = 'https://bucket.example/videos/x.mp4?X-Amz-Signature=sig'
         client.head_object.return_value = {'ContentLength': len(data)}
 
         def get_object(Bucket, Key, Range):
@@ -382,25 +382,33 @@ class DirectUploadTests(CaseStudyBase):
         storage._normalize_name.side_effect = lambda name: f'media-prefix/{name}'
         return storage, client
 
-    def run_flow(self, data):
+    def run_flow(self, data, size=None):
         storage, client = self.fake_storage(data)
         video = self.client.post(self.url('videos'), {'title': 'Demo'}, format='json').data
         with override_settings(MEDIA_STORAGE='s3'), mock.patch('cms.project_views.default_storage', storage):
-            started = self.client.post(self.url('videos', video['id'], 'upload'))
+            started = self.client.post(self.url('videos', video['id'], 'upload'), {'size': len(data) if size is None else size}, format='json')
             done = self.client.post(self.url('videos', video['id'], 'complete'))
         return started, done, storage, client
 
-    def test_signed_form_is_restricted(self):
+    def test_signed_put_is_restricted(self):
         started, done, _, client = self.run_flow(mp4())
-        self.assertEqual(started.data['mode'], 'direct')
-        kwargs = client.generate_presigned_post.call_args.kwargs
-        self.assertIn(['content-length-range', 32, settings.VIDEO_MAX_UPLOAD_MB * 1024 * 1024], kwargs['Conditions'])
-        self.assertIn({'Content-Type': 'video/mp4'}, kwargs['Conditions'])
+        self.assertEqual((started.data['mode'], started.data['method']), ('direct', 'PUT'))
+        self.assertEqual(started.data['headers']['Content-Type'], 'video/mp4')
+        args, kwargs = client.generate_presigned_url.call_args
+        self.assertEqual((args[0], kwargs['HttpMethod']), ('put_object', 'PUT'))
+        params = kwargs['Params']
+        self.assertEqual((params['ContentType'], params['ContentLength']), ('video/mp4', len(mp4())))
+        self.assertTrue(params['Key'].startswith('media-prefix/videos/'))
         self.assertEqual(kwargs['ExpiresIn'], settings.VIDEO_DIRECT_UPLOAD_EXPIRY_SECONDS)
-        self.assertTrue(kwargs['Key'].startswith('media-prefix/videos/'))
         self.assertEqual(done.status_code, 200, done.data)
         self.assertEqual(done.data['processing_status'], 'ready')
         self.assertEqual(ProjectVideo.objects.get().pending_key, '')
+
+    def test_oversized_or_missing_size_is_refused_before_signing(self):
+        for size in (settings.VIDEO_MAX_UPLOAD_MB * 1024 * 1024 + 1, 'abc'):
+            started, _, _, client = self.run_flow(mp4(), size=size)
+            self.assertEqual(started.status_code, 400)
+            client.generate_presigned_url.assert_not_called()
 
     def test_invalid_object_is_deleted(self):
         started, done, storage, _ = self.run_flow(b'\0' * 200)

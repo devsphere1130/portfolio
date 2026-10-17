@@ -120,6 +120,8 @@ DATABASES = {
         conn_health_checks=True,
     )
 }
+# Transaction-pooling poolers (Neon's "-pooler" host, PgBouncer) can't keep server-side cursors open.
+DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = env('DATABASE_DISABLE_SERVER_SIDE_CURSORS', default=False, cast=bool)
 # Containers reach the same database by a different address (127.0.0.1 inside a container is the container).
 # DATABASE_HOST / DATABASE_PORT swap just the address, so the credentials stay in one place: DATABASE_URL.
 # Development only: production must state its real database address in DATABASE_URL itself.
@@ -193,6 +195,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = env('SECURE_SSL_REDIRECT', default=False, cast=bool)
+SECURE_REDIRECT_EXEMPT = [r'^api/health/$']  # platform health checks call over plain HTTP inside the network
 SECURE_HSTS_SECONDS = env('SECURE_HSTS_SECONDS', default=0, cast=int)
 # Opt-in: both commit every subdomain to HTTPS-only (preload is very hard to undo).
 SECURE_HSTS_INCLUDE_SUBDOMAINS = env('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=False, cast=bool)
@@ -239,6 +242,8 @@ STORAGES = {
 }
 if MEDIA_STORAGE == 's3':
     # Any S3-compatible service (AWS S3, Cloudflare R2, DigitalOcean Spaces, MinIO, ...).
+    from botocore.config import Config as BotoConfig
+
     STORAGES['default'] = {
         'BACKEND': 'storages.backends.s3.S3Storage',
         'OPTIONS': {
@@ -252,6 +257,9 @@ if MEDIA_STORAGE == 's3':
             'querystring_auth': False,  # public portfolio images; bucket policy controls access
             'file_overwrite': False,
             'object_parameters': {'CacheControl': 'public, max-age=31536000, immutable'},
+            # Only send checksums when an operation requires them: newer boto3 defaults add checksum
+            # headers that not every S3-compatible service (or presigned URL flow) accepts.
+            'client_config': BotoConfig(request_checksum_calculation='when_required', response_checksum_validation='when_required'),
         },
     }
 elif MEDIA_STORAGE != 'local':

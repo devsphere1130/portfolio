@@ -69,6 +69,13 @@ def media_and_email_checks(app_configs, **kwargs):
         issues.append(Warning('Uploaded images are stored on this server\'s disk (MEDIA_STORAGE=local).',
                               hint='Fine with a persistent volume (compose.prod.yaml); on platforms that wipe the disk on '
                                    'redeploy use MEDIA_STORAGE=s3.', id='devsphere.W020'))
+    if settings.MEDIA_STORAGE == 's3':
+        options = settings.STORAGES['default'].get('OPTIONS', {})
+        if 'r2.cloudflarestorage.com' in (options.get('endpoint_url') or '') and not options.get('custom_domain'):
+            issues.append(Warning('Cloudflare R2 is used without MEDIA_S3_CUSTOM_DOMAIN.',
+                                  hint='The R2 S3 endpoint is private, so image and video links would not load. Enable the '
+                                       "bucket's public r2.dev URL or a custom domain and set MEDIA_S3_CUSTOM_DOMAIN to its host.",
+                                  id='devsphere.W023'))
     if not settings.PUBLIC_SITE_URL:
         issues.append(Warning('PUBLIC_SITE_URL is not set.',
                               hint='Set it to the website origin (e.g. https://devsphere.dev) so case-study link previews '

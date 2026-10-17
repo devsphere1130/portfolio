@@ -25,6 +25,7 @@ Open http://localhost:5173 (site) and http://localhost:5173/admin (dashboard).
 
 ## Documentation
 
+- **[docs/DEPLOY.md](docs/DEPLOY.md)** — production on Vercel (site) + Render (API) + Neon (database) + Cloudflare R2 (media).
 - **[docs/SETUP.md](docs/SETUP.md)** — setup with or without Docker, admin accounts, editing content, media,
   email, production deployment (Vercel or containers), backups, troubleshooting, security notes.
 - **[docs/WHATSAPP.md](docs/WHATSAPP.md)** — WhatsApp click-to-chat, lead management and the optional Cloud API.

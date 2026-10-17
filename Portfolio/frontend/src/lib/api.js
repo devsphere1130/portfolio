@@ -72,29 +72,33 @@ export async function api(path, { method = 'GET', body, query, signal, retry = t
 }
 
 /**
- * Upload a file with progress (fetch can't report upload progress). `path` is an API path, or with
- * `direct: true` an absolute URL from a signed storage form: then no cookies or CSRF token are sent and
- * `fields` (the signed policy) must come before the file.
+ * Upload a file with progress (fetch can't report upload progress).
+ * - API upload: `path` is an API path; sent as multipart with the session cookie and CSRF token.
+ * - Direct upload: `direct: true` with an absolute presigned URL; the raw file is sent with `method`
+ *   (PUT for S3/R2 presigned URLs) and exactly the signed `headers`. No cookies or CSRF token are sent.
  */
-export async function uploadWithProgress(path, file, { fields = {}, direct = false, onProgress, signal } = {}) {
-  const body = new FormData();
-  Object.entries(fields).forEach(([key, value]) => body.append(key, value));
-  body.append('file', file);
+export async function uploadWithProgress(path, file, { direct = false, method = 'POST', headers = {}, onProgress, signal } = {}) {
   const csrf = direct ? null : await ensureCsrf();
+  let body = file;
+  if (!direct) {
+    body = new FormData();
+    body.append('file', file);
+  }
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', direct ? path : `${API_BASE}${path}`);
+    xhr.open(direct ? method : 'POST', direct ? path : `${API_BASE}${path}`);
     xhr.withCredentials = !direct;
     if (csrf) xhr.setRequestHeader('X-CSRFToken', csrf);
-    xhr.setRequestHeader('Accept', 'application/json');
+    if (!direct) xhr.setRequestHeader('Accept', 'application/json');
+    Object.entries(headers).forEach(([key, value]) => xhr.setRequestHeader(key, value));
     xhr.upload.onprogress = (event) => event.lengthComputable && onProgress?.(event.loaded / event.total);
     xhr.onload = () => {
       let data = null;
-      try { data = xhr.responseText ? JSON.parse(xhr.responseText) : null; } catch { data = null; }
+      try { data = xhr.responseText && !direct ? JSON.parse(xhr.responseText) : null; } catch { data = null; }
       if (xhr.status >= 200 && xhr.status < 300) resolve(data);
-      else reject(new ApiError(xhr.status, data || { detail: direct ? 'The storage service rejected the upload.' : undefined }));
+      else reject(new ApiError(xhr.status, data || { detail: direct ? 'The storage service rejected the upload (check the bucket CORS rule).' : undefined }));
     };
-    xhr.onerror = () => reject(new ApiError(0, { detail: 'The upload failed. Check your connection and try again.' }));
+    xhr.onerror = () => reject(new ApiError(0, { detail: direct ? 'Could not reach the storage service. Check the bucket CORS rule allows PUT from this site.' : 'The upload failed. Check your connection and try again.' }));
     xhr.onabort = () => reject(new ApiError(0, { detail: 'Upload cancelled.' }));
     signal?.addEventListener('abort', () => xhr.abort());
     xhr.send(body);

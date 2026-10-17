@@ -1,0 +1,72 @@
+# Render Blueprint for the DevSphere API (Django + DRF). See Portfolio/docs/DEPLOY.md.
+# Render → New → Blueprint → pick this repo. Values marked `sync: false` are asked for once, on creation.
+services:
+  - type: web
+    name: devsphere-api            # → https://devsphere-api.onrender.com (frontend/vercel.json proxies /api here)
+    runtime: docker
+    rootDir: Portfolio/backend
+    dockerfilePath: ./Portfolio/backend/Dockerfile   # relative to the repo root; the last stage is `prod`
+    dockerContext: ./Portfolio/backend
+    region: singapore              # closest to India; create the Neon project in AWS ap-southeast-1 to match
+    plan: free                     # free: sleeps after 15 min idle and blocks outbound SMTP (see DEPLOY.md)
+    healthCheckPath: /api/health/
+    envVars:
+      - key: DJANGO_ENV
+        value: production
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: MIGRATE_ON_START      # the free plan has no pre-deploy step; migrations run before gunicorn starts
+        value: "1"
+      - key: WEB_CONCURRENCY       # gunicorn workers; 2 fits the 512 MB free instance
+        value: "2"
+      - key: DJANGO_ALLOWED_HOSTS  # e.g. devsphere-api.onrender.com,www.yourdomain.com,yourproject.vercel.app
+        sync: false
+      - key: CSRF_TRUSTED_ORIGINS  # the site origin(s) people use, e.g. https://www.yourdomain.com
+        sync: false
+      - key: FRONTEND_ORIGINS
+        sync: false
+      - key: PUBLIC_SITE_URL       # e.g. https://www.yourdomain.com
+        sync: false
+      - key: SECURE_SSL_REDIRECT
+        value: "True"
+      - key: SECURE_HSTS_SECONDS
+        value: "31536000"
+      # Neon: the connection string from the Neon console (keep ?sslmode=require)
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_CONN_MAX_AGE
+        value: "60"
+      # Cloudflare R2
+      - key: MEDIA_STORAGE
+        value: s3
+      - key: MEDIA_S3_BUCKET
+        sync: false
+      - key: MEDIA_S3_REGION
+        value: auto
+      - key: MEDIA_S3_ENDPOINT_URL # https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+        sync: false
+      - key: MEDIA_S3_ACCESS_KEY_ID
+        sync: false
+      - key: MEDIA_S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: MEDIA_S3_CUSTOM_DOMAIN # the bucket's public host: media.yourdomain.com or pub-xxxx.r2.dev
+        sync: false
+      # Contact form email (Render's free plan blocks SMTP ports 25/465/587; see DEPLOY.md)
+      - key: CONTACT_NOTIFY_EMAIL
+        sync: false
+      - key: EMAIL_BACKEND
+        value: django.core.mail.backends.smtp.EmailBackend
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        sync: false
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
