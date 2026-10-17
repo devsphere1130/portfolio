@@ -1,0 +1,17 @@
+# Keep secrets, local data and host-specific files out of the build context and image layers.
+.env
+.env.*
+!.env.example
+venv/
+.venv/
+**/__pycache__/
+*.py[cod]
+db.sqlite3
+media/
+staticfiles/
+legacy_inquiries.json
+*.log
+.git
+.pytest_cache/
+Dockerfile
+.dockerignore
