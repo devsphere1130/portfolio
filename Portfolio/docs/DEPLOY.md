@@ -29,7 +29,7 @@ instead, the dashboard login would rely on third-party cookies, which Safari blo
 
 ## 1. Neon (database)
 
-1. Create a project in region **AWS Asia Pacific (Singapore)**, the same region as the Render service.
+1. Create a project (or use the one Vercel made). Its region must match `region:` in `render.yaml` (currently `virginia` = AWS US East 1).
 2. Copy the connection string from **Connect**. Keep `?sslmode=require` on the end.
    - The **direct** host (no `-pooler` in the name) needs no extra settings. Use this one.
    - If you use the **pooled** host (`…-pooler…`), also set `DATABASE_DISABLE_SERVER_SIDE_CURSORS=True` on Render.
@@ -67,7 +67,7 @@ size). The API then checks the file. Images are uploaded through the API, which 
 ## 3. Render (API)
 
 1. **New → Blueprint** → choose the repo. Render reads `render.yaml` and creates **devsphere-api** (Docker,
-   Singapore, health check `/api/health/`). `DJANGO_SECRET_KEY` is generated for you.
+   Virginia, health check `/api/health/`). `DJANGO_SECRET_KEY` is generated for you.
 2. Fill the values it asks for:
 
    | Variable | Value |
