@@ -7,7 +7,7 @@ services:
     rootDir: Portfolio/backend
     dockerfilePath: ./Portfolio/backend/Dockerfile   # relative to the repo root; the last stage is `prod`
     dockerContext: ./Portfolio/backend
-    region: singapore              # closest to India; create the Neon project in AWS ap-southeast-1 to match
+    region: virginia               # same region as the Neon database (AWS US East 1), so queries stay fast
     plan: free                     # free: sleeps after 15 min idle and blocks outbound SMTP (see DEPLOY.md)
     healthCheckPath: /api/health/
     envVars:
