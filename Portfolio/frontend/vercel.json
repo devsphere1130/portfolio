@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://devsphere-api.onrender.com/api/$1"
+      "destination": "https://devsphere-api-u4d9.onrender.com/api/$1"
     },
     {
       "source": "/work/:slug",
@@ -14,7 +14,7 @@
           "value": ".*([Ff]acebookexternalhit|[Ff]acebot|[Tt]witterbot|[Ll]inked[Ii]n[Bb]ot|[Ss]lackbot|[Dd]iscordbot|[Tt]elegram[Bb]ot|[Ww]hats[Aa]pp|[Ss]kype[Uu]ri[Pp]review|[Pp]interest|[Rr]edditbot|[Ee]mbedly|[Ii]framely|[Aa]pplebot).*"
         }
       ],
-      "destination": "https://devsphere-api.onrender.com/api/public/share/work/:slug/"
+      "destination": "https://devsphere-api-u4d9.onrender.com/api/public/share/work/:slug/"
     },
     { "source": "/((?!assets/).*)", "destination": "/index.html" }
   ],

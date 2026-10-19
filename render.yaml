@@ -2,11 +2,11 @@
 # Render → New → Blueprint → pick this repo. Values marked `sync: false` are asked for once, on creation.
 services:
   - type: web
-    name: devsphere-api            # → https://devsphere-api.onrender.com (frontend/vercel.json proxies /api here)
+    name: devsphere-api            # → https://devsphere-api-u4d9.onrender.com (frontend/vercel.json proxies /api here)
     runtime: docker
     rootDir: Portfolio/backend
-    dockerfilePath: ./Portfolio/backend/Dockerfile   # relative to the repo root; the last stage is `prod`
-    dockerContext: ./Portfolio/backend
+    dockerfilePath: ./Dockerfile   # relative to rootDir; the last stage is `prod`
+    dockerContext: .
     region: virginia               # same region as the Neon database (AWS US East 1), so queries stay fast
     plan: free                     # free: sleeps after 15 min idle and blocks outbound SMTP (see DEPLOY.md)
     healthCheckPath: /api/health/
@@ -21,7 +21,7 @@ services:
         value: "1"
       - key: WEB_CONCURRENCY       # gunicorn workers; 2 fits the 512 MB free instance
         value: "2"
-      - key: DJANGO_ALLOWED_HOSTS  # e.g. devsphere-api.onrender.com,www.yourdomain.com,yourproject.vercel.app
+      - key: DJANGO_ALLOWED_HOSTS  # e.g. devsphere-api-u4d9.onrender.com,devsphereportfolio.vercel.app
         sync: false
       - key: CSRF_TRUSTED_ORIGINS  # the site origin(s) people use, e.g. https://www.yourdomain.com
         sync: false
