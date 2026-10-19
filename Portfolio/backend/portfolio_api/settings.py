@@ -319,6 +319,8 @@ EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = env('EMAIL_USE_TLS', default=True, cast=bool)
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='webmaster@localhost')
+# Give up on a slow or blocked mail server quickly; the inquiry is already saved either way.
+EMAIL_TIMEOUT = env('EMAIL_TIMEOUT', default=10, cast=int)
 
 
 # ---------------------------------------------------------------------------
