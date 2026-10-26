@@ -5,7 +5,7 @@ import { CustomCursor } from '../components/CustomCursor';
 import { MouseLight } from '../components/effects/MouseLight';
 import { Footer } from '../components/Footer';
 import { Navbar } from '../components/Navbar';
-import { ProjectCard } from '../components/ProjectCard';
+import { ProjectList } from '../components/ProjectList';
 import { pick, useContent, usePageMeta, useSection } from '../content/hooks';
 import { useLenis } from '../hooks/useLenis';
 
@@ -48,10 +48,8 @@ export const Projects = () => {
             </p>
           </div>
 
-          <div className="mt-16 space-y-20 md:space-y-28">
-            {projectsData.map((project, index) => (
-              <ProjectCard key={project.id} project={project} index={index} />
-            ))}
+          <div className="mt-16">
+            <ProjectList projects={projectsData} skeletons={3} />
           </div>
         </section>
       </main>

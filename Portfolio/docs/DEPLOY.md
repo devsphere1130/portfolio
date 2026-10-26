@@ -98,6 +98,14 @@ minutes keeps it awake. The free plan also has no shell or pre-deploy step; this
 
 ### Email (important)
 
+**Free option using only your Gmail (recommended):** a Google Apps Script sends the notification from your own
+Gmail over HTTPS, which Render does not block. Create a script at script.google.com with the code from
+`Portfolio/docs/gmail-relay.gs` (set its `SECRET`), deploy it as a **Web app** (*Execute as: Me*, *Who has
+access: Anyone*), then set on Render: `CONTACT_NOTIFY_WEBHOOK_URL` = the web-app URL and
+`CONTACT_NOTIFY_WEBHOOK_SECRET` = the same secret. Free limit: 100 emails a day. When the URL is set, SMTP is
+not used.
+
+
 Render's **free** web services block outgoing SMTP on ports 25, 465 and 587, so Gmail SMTP **won't send**
 from there. Inquiries are still saved in the dashboard, but the notification email silently fails. Choose one:
 

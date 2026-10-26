@@ -1,8 +1,9 @@
-import { Component, Suspense, useEffect, useRef } from 'react';
+import { Component, useEffect, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Environment } from '@react-three/drei';
 import * as THREE from 'three';
 import { OrbitRing } from './OrbitRing';
+import { frameDelta, smoothing } from './animationTime';
+import { GeneratedEnvironment } from './GeneratedEnvironment';
 
 // The hero's orbital sphere, recomposed as a calm, contained focal point for the Contact card.
 const ORB_RADIUS = 1.95; // outer ring plus node size: what the camera must keep in frame
@@ -22,12 +23,16 @@ const Orb = ({ pointer, reduced }) => {
   const coreRef = useRef(null);
   const shellRef = useRef(null);
   const tilt = useRef({ x: 0, y: 0 });
+  const time = useRef(0);
 
-  useFrame((state, delta) => {
-    const t = state.clock.elapsedTime;
+  useFrame((_, rawDelta) => {
+    // Own time (see animationTime.js): no snap or jump after the canvas pauses and resumes.
+    const delta = frameDelta(rawDelta);
+    time.current += delta;
+    const t = time.current;
     // Ease toward the pointer so card parallax feels weighty rather than twitchy.
-    tilt.current.x = THREE.MathUtils.lerp(tilt.current.x, pointer.current.x, 0.05);
-    tilt.current.y = THREE.MathUtils.lerp(tilt.current.y, pointer.current.y, 0.05);
+    tilt.current.x = THREE.MathUtils.lerp(tilt.current.x, pointer.current.x, smoothing(0.05, delta));
+    tilt.current.y = THREE.MathUtils.lerp(tilt.current.y, pointer.current.y, smoothing(0.05, delta));
     if (groupRef.current) {
       groupRef.current.rotation.y = t * 0.12 + tilt.current.x * 0.35;
       groupRef.current.rotation.x = 0.18 - tilt.current.y * 0.25;
@@ -93,9 +98,7 @@ export const ContactOrb = ({ pointer, active, reduced, onReady, onFail }) => (
       <pointLight position={[2.4, 2, 3]} intensity={2.2} color="#7dd3fc" />
       <pointLight position={[-3, -1.5, 2]} intensity={0.8} color="#a5a4f3" />
       <Orb pointer={pointer} reduced={reduced} />
-      <Suspense fallback={null}>
-        <Environment files="/hdr/potsdamer_platz_1k.hdr" />
-      </Suspense>
+      <GeneratedEnvironment />
     </Canvas>
   </OrbBoundary>
 );

@@ -1,11 +1,12 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Environment } from '@react-three/drei';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { DigitalCore } from './DigitalCore';
+import { GeneratedEnvironment } from './GeneratedEnvironment';
 import { ParticleField } from './ParticleField';
 import { ReadySignal } from './ReadySignal';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { frameDelta, smoothing } from './animationTime';
 
 const CameraRig = ({ mouse, hoverRef }) => {
   const lightRef = useRef(null);
@@ -19,15 +20,17 @@ const CameraRig = ({ mouse, hoverRef }) => {
     camera.position.z = Math.max(6.2, 2.25 / Math.sin(halfFov));
   }, [camera, size.width, size.height]);
 
-  useFrame(() => {
-    camera.position.x = THREE.MathUtils.lerp(camera.position.x, 0.28 + mouse.current.x * 0.58, 0.045);
-    camera.position.y = THREE.MathUtils.lerp(camera.position.y, mouse.current.y * 0.32, 0.045);
+  useFrame((_, delta) => {
+    const dt = frameDelta(delta);
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, 0.28 + mouse.current.x * 0.58, smoothing(0.045, dt));
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, mouse.current.y * 0.32, smoothing(0.045, dt));
     camera.lookAt(0.28, 0, 0);
 
     if (lightRef.current) {
-      lightRef.current.position.x = THREE.MathUtils.lerp(lightRef.current.position.x, 2 + mouse.current.x * 1.4, 0.05);
-      lightRef.current.position.y = THREE.MathUtils.lerp(lightRef.current.position.y, 2 - mouse.current.y * 1.2, 0.05);
-      lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, hoverRef.current ? 3 : 2.1, 0.05);
+      const k = smoothing(0.05, dt);
+      lightRef.current.position.x = THREE.MathUtils.lerp(lightRef.current.position.x, 2 + mouse.current.x * 1.4, k);
+      lightRef.current.position.y = THREE.MathUtils.lerp(lightRef.current.position.y, 2 - mouse.current.y * 1.2, k);
+      lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, hoverRef.current ? 3 : 2.1, k);
     }
   });
 
@@ -35,9 +38,10 @@ const CameraRig = ({ mouse, hoverRef }) => {
 };
 
 const MouseSmoother = ({ mouse, target }) => {
-  useFrame(() => {
-    mouse.current.x = THREE.MathUtils.lerp(mouse.current.x, target.current.x, 0.055);
-    mouse.current.y = THREE.MathUtils.lerp(mouse.current.y, target.current.y, 0.055);
+  useFrame((_, delta) => {
+    const k = smoothing(0.055, frameDelta(delta));
+    mouse.current.x = THREE.MathUtils.lerp(mouse.current.x, target.current.x, k);
+    mouse.current.y = THREE.MathUtils.lerp(mouse.current.y, target.current.y, k);
   });
 
   return null;
@@ -49,10 +53,7 @@ const SceneContent = ({ mouse, hoverRef, reduced }) => (
     <CameraRig mouse={mouse} hoverRef={hoverRef} />
     <DigitalCore mouse={mouse} hoverRef={hoverRef} reduced={reduced} />
     <ParticleField mouse={mouse} reduced={reduced} />
-    {/* Own boundary so the core renders immediately; reflections arrive once the HDR loads. */}
-    <Suspense fallback={null}>
-      <Environment files="/hdr/potsdamer_platz_1k.hdr" />
-    </Suspense>
+    <GeneratedEnvironment />
   </>
 );
 
@@ -90,13 +91,11 @@ export const HeroScene = ({ onReady }) => {
     return () => window.removeEventListener('pointermove', handlePointerMove);
   }, []);
 
+  // The still sphere (its real first frame) shows until the live canvas is ready, and stays if WebGL fails.
+  const poster = <img data-poster className="hero-3d-poster hero-3d-poster--alpha object-contain" src="/hero/sphere-poster.webp" alt="" decoding="async" fetchpriority="high" />;
+
   if (webglFailed) {
-    return (
-      <div className="relative grid h-full min-h-[24rem] place-items-center overflow-hidden rounded-lg border border-white/10 bg-slate-950/60">
-        <div className="absolute h-72 w-72 rounded-full border border-sky-300/20 bg-sky-300/10 blur-xl" />
-        <div className="relative h-44 w-44 rounded-full border border-sky-200/30 bg-sky-300/10 shadow-[0_0_90px_rgba(56,189,248,0.22)]" />
-      </div>
-    );
+    return <div className="relative h-[27rem] min-h-[27rem] w-full md:h-[36rem] lg:h-[calc(100vh-7rem)] lg:min-h-[40rem]">{poster}</div>;
   }
 
   return (
@@ -112,6 +111,8 @@ export const HeroScene = ({ onReady }) => {
       data-cursor="3d"
     >
       <div className="absolute inset-6 rounded-full bg-sky-300/10 blur-3xl" />
+      {poster}
+      <div data-live className="hero-3d-live">
       <Canvas
         dpr={[1, 1.5]}
         frameloop={inView && pageVisible ? 'always' : 'never'}
@@ -129,6 +130,7 @@ export const HeroScene = ({ onReady }) => {
           <ReadySignal onReady={onReady} />
         </Suspense>
       </Canvas>
+      </div>
       <div className="pointer-events-none absolute left-4 top-8 hidden text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-sky-200/50 md:block">
         System / Online
       </div>

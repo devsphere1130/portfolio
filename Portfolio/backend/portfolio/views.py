@@ -1,4 +1,6 @@
+import json
 import logging
+import urllib.request
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -41,26 +43,32 @@ class ContactInquiryView(APIView):
     @staticmethod
     def _notify(inquiry):
         recipient = settings.CONTACT_NOTIFY_EMAIL
-        if not recipient:
+        webhook = settings.CONTACT_NOTIFY_WEBHOOK_URL
+        if not recipient and not webhook:
             return
+        subject = f"New project inquiry: {inquiry.name}"
         body = (
             f"Name: {inquiry.name}\n"
             f"Email: {inquiry.email}\n"
+            f"Phone: {inquiry.phone_number or '-'}\n"
             f"Company: {inquiry.company or '-'}\n"
             f"Needs: {inquiry.get_service_display()}\n"
             f"Budget: {inquiry.get_budget_display() or '-'}\n\n"
             f"{inquiry.details}\n"
         )
         try:
-            send_mail(
-                subject=f"New project inquiry: {inquiry.name}",
-                message=body,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[recipient],
-            )
+            if webhook:
+                # HTTPS mail relay (e.g. a Google Apps Script that emails you from your own Gmail).
+                # Used where SMTP ports are blocked, such as Render's free plan. See docs/DEPLOY.md.
+                payload = json.dumps({'secret': settings.CONTACT_NOTIFY_WEBHOOK_SECRET, 'subject': subject,
+                                      'body': body, 'reply_to': inquiry.email}).encode()
+                request = urllib.request.Request(webhook, data=payload, headers={'Content-Type': 'application/json'}, method='POST')
+                with urllib.request.urlopen(request, timeout=settings.EMAIL_TIMEOUT) as response:
+                    answer = response.read(200).decode(errors='replace').strip()
+                if answer != 'ok':
+                    raise RuntimeError(f'mail relay answered {answer!r}')
+            else:
+                send_mail(subject=subject, message=body, from_email=settings.DEFAULT_FROM_EMAIL, recipient_list=[recipient])
         except Exception:
             # The inquiry is already saved; a mail outage must not lose it or fail the request.
             logger.exception("Could not send notification email for inquiry %s", inquiry.id)
-
-
-            

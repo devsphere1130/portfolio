@@ -16,6 +16,7 @@ from portfolio.models import ContactInquiry
 from whatsapp.models import WhatsAppConfiguration
 from whatsapp.serializers import PublicWhatsAppSerializer
 
+from . import caching
 from . import pages as page_service
 from . import project_views
 from .audit import record
@@ -490,8 +491,7 @@ def published(queryset, preview):
 
 
 def cache_headers(response, preview):
-    response['Cache-Control'] = 'private, no-store' if preview else 'public, max-age=60, stale-while-revalidate=300'
-    return response
+    return caching.private(response) if preview else caching.public(response)
 
 
 def public_page(page, request, preview):

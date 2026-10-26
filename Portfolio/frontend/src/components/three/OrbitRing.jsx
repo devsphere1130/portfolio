@@ -1,9 +1,11 @@
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { frameDelta } from './animationTime';
 
-export const OrbitRing = ({ radius = 1.7, rotation = [0, 0, 0], speed = 0.2, nodeCount = 3, mouse }) => {
+export const OrbitRing = ({ radius = 1.7, rotation = [0, 0, 0], speed = 0.12, nodeCount = 3, mouse, reduced = false }) => {
   const ringRef = useRef(null);
+  const time = useRef(0);
   const nodes = useMemo(
     () =>
       Array.from({ length: nodeCount }, (_, index) => ({
@@ -13,9 +15,10 @@ export const OrbitRing = ({ radius = 1.7, rotation = [0, 0, 0], speed = 0.2, nod
     [nodeCount]
   );
 
-  useFrame((state) => {
+  useFrame((_, delta) => {
     if (!ringRef.current) return;
-    ringRef.current.rotation.z = rotation[2] + state.clock.elapsedTime * speed;
+    time.current += frameDelta(delta, reduced); // own time: no jump after a pause
+    ringRef.current.rotation.z = rotation[2] + time.current * speed;
     ringRef.current.rotation.x = rotation[0] + mouse.current.y * 0.08;
     ringRef.current.rotation.y = rotation[1] + mouse.current.x * 0.08;
   });

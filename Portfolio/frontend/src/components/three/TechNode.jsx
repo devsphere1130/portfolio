@@ -1,16 +1,20 @@
 import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef, useState } from 'react';
+import { frameDelta } from './animationTime';
 
-export const TechNode = ({ label, position, mouse }) => {
+export const TechNode = ({ label, position, mouse, reduced = false }) => {
   const nodeRef = useRef(null);
+  const time = useRef(0);
   const [hovered, setHovered] = useState(false);
 
-  useFrame((state) => {
+  useFrame((_, delta) => {
     if (!nodeRef.current) return;
+    const dt = frameDelta(delta, reduced);
+    time.current += dt;
     // The parent group already sets the anchor position; only bob locally.
-    nodeRef.current.position.y = Math.sin(state.clock.elapsedTime * 1.2 + position[0]) * 0.06;
-    nodeRef.current.rotation.y += 0.01 + mouse.current.x * 0.002;
+    nodeRef.current.position.y = Math.sin(time.current * 1.2 + position[0]) * 0.06;
+    nodeRef.current.rotation.y += (0.35 + mouse.current.x * 0.08) * dt; // radians per second
   });
 
   return (

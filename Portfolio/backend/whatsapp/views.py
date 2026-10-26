@@ -20,6 +20,7 @@ from . import cloud
 from .models import WhatsAppConfiguration, WhatsAppConversation, WhatsAppMessage
 from .serializers import AdminWhatsAppSerializer, PublicWhatsAppSerializer, SendMessageSerializer, WhatsAppMessageSerializer
 from .webhooks import process_payload, signature_is_valid
+from cms import caching
 
 logger = logging.getLogger(__name__)
 OPEN_STATUSES = [ContactInquiry.LeadStatus.NEW, ContactInquiry.LeadStatus.AWAITING_RESPONSE]
@@ -30,8 +31,7 @@ class PublicWhatsAppView(APIView):
 
     def get(self, request):
         response = Response(PublicWhatsAppSerializer(WhatsAppConfiguration.load()).data)
-        response['Cache-Control'] = 'public, max-age=60'
-        return response
+        return caching.public(response)
 
 
 class AdminWhatsAppSettingsView(APIView):

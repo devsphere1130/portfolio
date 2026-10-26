@@ -1,15 +1,17 @@
 import { Link } from 'react-router-dom';
 import { pick, useContent, useSection } from '../content/hooks';
 import { SectionHeading } from '../components/SectionHeading';
-import { ProjectCard } from '../components/ProjectCard';
+import { ProjectList } from '../components/ProjectList';
 
 export const SelectedWork = () => {
-  const { projects } = useContent();
+  const { projects, status } = useContent();
   const section = useSection('home', 'selected-work');
   const cta = pick(section, 'cta', { label: 'View All Projects', href: '/projects' });
   // Featured projects first; the API already orders by display order.
   const shown = [...projects].sort((a, b) => Number(Boolean(b.isFeatured)) - Number(Boolean(a.isFeatured))).slice(0, 2);
-  if (!projects.length) return null;
+  // The API confirmed there are no projects yet: leave the section out rather than show an empty block.
+  // (While loading it shows skeletons; if the API can't be reached, ProjectList shows a notice.)
+  if (status === 'live' && !projects.length) return null;
   return (
     <section id="work" className="py-24 md:py-32">
       <div className="section-shell">
@@ -17,10 +19,8 @@ export const SelectedWork = () => {
           {pick(section, 'title', 'Selected Work')}
         </SectionHeading>
 
-        <div className="mt-16 space-y-20 md:space-y-28">
-          {shown.map((project, index) => (
-            <ProjectCard key={project.id} project={project} index={index} />
-          ))}
+        <div className="mt-16">
+          <ProjectList projects={shown} />
         </div>
 
         <div className="mt-16 text-center">
