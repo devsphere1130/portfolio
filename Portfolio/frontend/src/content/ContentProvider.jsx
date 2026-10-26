@@ -25,7 +25,9 @@ export const ContentProvider = ({ children }) => {
         whatsapp: data.whatsapp || { enabled: false },
       }))
       .catch((error) => {
-        if (error.name !== 'AbortError') console.warn('Content API unavailable; showing bundled content.', error.message);
+        if (error.name === 'AbortError') return;
+        console.warn('Content API unavailable; showing bundled content.', error.message);
+        setContent((prev) => ({ ...prev, status: 'error' }));
       });
     return () => controller.abort();
   }, []);

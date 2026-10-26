@@ -90,7 +90,10 @@ class PublishingTests(Base):
         self.assertIn('secret', self.public_slugs(client=self.client, preview=True))
         response = self.client.get('/api/public/content/?preview=1')
         self.assertEqual(response['Cache-Control'], 'private, no-store')
-        self.assertIn('public', APIClient().get('/api/public/content/')['Cache-Control'])
+        public = APIClient().get('/api/public/content/')
+        # Browsers revalidate every visit, so newly published content shows on the next page load.
+        self.assertEqual(public['Cache-Control'], 'public, no-cache')
+        self.assertIn('stale-while-revalidate', public['Vercel-CDN-Cache-Control'])
 
     def test_page_edits_stay_private_until_published(self):
         call_command('seed_content', stdout=BytesIO() and __import__('io').StringIO())

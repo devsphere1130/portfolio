@@ -40,6 +40,9 @@ export const HeroRibbon = ({ speed = 0.18, amplitude = 0.18, onReady }) => {
   return (
     <div ref={rootRef} className="hero-ribbon" aria-hidden="true">
       <div className="hero-ribbon__scene">
+        {/* Ribbon's starting pose; the orthographic camera stretches with the box, so "fill" matches. */}
+        <img data-poster className="hero-3d-poster object-fill" src="/hero/ribbon-poster.webp" alt="" decoding="async" fetchpriority="high" />
+        <div data-live className="hero-3d-live">
         <RibbonBoundary>
           <Canvas
             style={{ pointerEvents: 'none' }}
@@ -69,6 +72,7 @@ export const HeroRibbon = ({ speed = 0.18, amplitude = 0.18, onReady }) => {
             <ReadySignal onReady={handleReady} />
           </Canvas>
         </RibbonBoundary>
+        </div>
       </div>
     </div>
   );

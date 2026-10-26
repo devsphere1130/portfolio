@@ -5,38 +5,36 @@ import { HeroRibbon } from '../components/hero/HeroRibbon';
 import { ScrollIndicator } from '../components/hero/ScrollIndicator';
 import { HeroScene } from '../components/three/HeroScene';
 
-// Reveal each 3D layer only once its canvas has drawn, sliding in from its own side.
-const reveal = (element, fromX) => {
+// Each 3D layer shows a still poster of its first frame immediately; once the canvas has really drawn,
+// the live canvas crossfades over it. Poster and first frame match, so there is no flash or pop.
+const reveal = (element) => {
   if (!element || element.dataset.revealed) return;
   element.dataset.revealed = 'true';
+  const live = element.querySelector('[data-live]');
+  const poster = element.querySelector('[data-poster]');
+  if (!live) return;
+  // Hide (never remove: React owns the node) so the browser stops compositing the placeholder.
+  const done = () => { if (poster) poster.style.visibility = 'hidden'; };
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    gsap.set(element, { opacity: 1, x: 0 });
+    gsap.set(live, { opacity: 1 });
+    done();
     return;
   }
-  gsap.fromTo(element, { opacity: 0, x: fromX }, {
-    opacity: 1, x: 0, duration: 1.3, ease: 'power3.out', clearProps: 'transform',
-  });
+  gsap.to(live, { opacity: 1, duration: 0.45, ease: 'power1.out' });
+  if (poster) gsap.to(poster, { opacity: 0, duration: 0.45, ease: 'power1.out', onComplete: done });
 };
 
 export const Hero = () => {
   const sectionRef = useRef(null);
   const sceneRef = useRef(null);
 
-  const handleRibbonReady = useCallback((element) => reveal(element, -160), []);
-  const handleSceneReady = useCallback(() => reveal(sceneRef.current, 160), []);
+  const handleRibbonReady = useCallback((element) => reveal(element), []);
+  const handleSceneReady = useCallback(() => reveal(sceneRef.current), []);
 
+  // No timer needed: while WebGL starts (or if it fails), the posters are already showing.
   useEffect(() => {
-    const ribbon = sectionRef.current?.querySelector('.hero-ribbon');
-    const scene = sceneRef.current;
-    // Safety net: if WebGL fails or is slow, still show the fallbacks.
-    const timer = setTimeout(() => {
-      reveal(ribbon, -160);
-      reveal(scene, 160);
-    }, 3000);
-    return () => {
-      clearTimeout(timer);
-      gsap.killTweensOf([ribbon, scene]);
-    };
+    const section = sectionRef.current;
+    return () => gsap.killTweensOf(section?.querySelectorAll('[data-live], [data-poster]') ?? []);
   }, []);
 
   return (
@@ -48,7 +46,7 @@ export const Hero = () => {
 
       <div className="hero-content-layout">
         <HeroContent />
-        <div ref={sceneRef} className="hero-content-scene opacity-0">
+        <div ref={sceneRef} className="hero-content-scene">
           <HeroScene onReady={handleSceneReady} />
         </div>
       </div>

@@ -1,20 +1,31 @@
 import { DataTexture, EquirectangularReflectionMapping, FloatType, LinearFilter, RGBAFormat } from 'three';
 
-// A small HDR lighting map generated entirely from Gaussian strip lights.
-// Smooth falloff avoids rectangular reflections on the polished sheets.
-export function createRibbonEnvironment() {
+// Strip lights for the ribbon's polished sheets.
+const RIBBON_LIGHTS = [
+  { x: 0.64, y: 0.5, sx: 0.065, sy: 0.36, power: 3, color: [0.02, 0.75, 1] },
+  { x: 0.85, y: 0.52, sx: 0.028, sy: 0.44, power: 9, color: [0.65, 0.98, 1] },
+  { x: 0.72, y: 0.78, sx: 0.16, sy: 0.048, power: 4, color: [0.8, 0.97, 1] },
+  { x: 0.76, y: 0.22, sx: 0.19, sy: 0.04, power: 3, color: [0.04, 0.66, 1] },
+  { x: 0.72, y: 0.56, sx: 0.2, sy: 0.4, power: 0.7, color: [0.01, 0.45, 0.8] },
+  { x: 0.43, y: 0.48, sx: 0.12, sy: 0.3, power: 2.5, color: [0.01, 0.09, 1] },
+];
+
+// Soft "sky" for the hero sphere and contact orb: a broad bright window and a blue horizon glow, so the
+// glassy core keeps a gentle highlight without the ribbon's vertical light bars.
+export const SPHERE_LIGHTS = [
+  { x: 0.36, y: 0.78, sx: 0.2, sy: 0.14, power: 2.4, color: [0.85, 0.95, 1] },
+  { x: 0.62, y: 0.62, sx: 0.32, sy: 0.2, power: 0.8, color: [0.3, 0.75, 1] },
+  { x: 0.5, y: 0.5, sx: 0.9, sy: 0.09, power: 0.55, color: [0.15, 0.55, 0.95] },
+  { x: 0.12, y: 0.55, sx: 0.18, sy: 0.25, power: 0.6, color: [0.35, 0.4, 1] },
+];
+
+// A small HDR lighting map generated entirely from Gaussian lights (no download).
+// Smooth falloff avoids rectangular reflections on the polished surfaces.
+export function createRibbonEnvironment(lights = RIBBON_LIGHTS) {
   // 256x128 is plenty for these soft lights and keeps the main thread free on load.
   const width = 256;
   const height = 128;
   const pixels = new Float32Array(width * height * 4);
-  const lights = [
-    { x: 0.64, y: 0.5, sx: 0.065, sy: 0.36, power: 3, color: [0.02, 0.75, 1] },
-    { x: 0.85, y: 0.52, sx: 0.028, sy: 0.44, power: 9, color: [0.65, 0.98, 1] },
-    { x: 0.72, y: 0.78, sx: 0.16, sy: 0.048, power: 4, color: [0.8, 0.97, 1] },
-    { x: 0.76, y: 0.22, sx: 0.19, sy: 0.04, power: 3, color: [0.04, 0.66, 1] },
-    { x: 0.72, y: 0.56, sx: 0.2, sy: 0.4, power: 0.7, color: [0.01, 0.45, 0.8] },
-    { x: 0.43, y: 0.48, sx: 0.12, sy: 0.3, power: 2.5, color: [0.01, 0.09, 1] },
-  ];
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
       const u = x / width;

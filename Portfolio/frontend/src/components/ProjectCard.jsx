@@ -71,14 +71,14 @@ export const ProjectCard = ({ project, index }) => {
     >
       {/* The image is a link too (the text panel's backdrop-filter stops the title's overlay at that panel). */}
       <Link to={`/work/${project.slug}`} tabIndex={-1} aria-hidden="true"
-            className="project-image relative block min-h-[20rem] overflow-hidden rounded-lg border border-white/10 bg-slate-900 md:min-h-[28rem]">
+            className="project-image relative block aspect-[16/10] overflow-hidden rounded-lg border border-white/10 bg-slate-900 lg:aspect-auto lg:min-h-[28rem]">
         {project.image ? (
           <img
             ref={imageRef}
             src={project.image}
             alt={project.imageAlt || project.title}
             loading="lazy"
-            className="h-full w-full object-cover opacity-80 saturate-90 transition-opacity duration-300 group-hover:opacity-100"
+            className="absolute inset-0 h-full w-full object-cover object-left-top opacity-80 saturate-90 transition-opacity duration-300 group-hover:opacity-100"
           />
         ) : (
           // No cover uploaded yet: an abstract branded panel (never a broken image or fake screenshot).

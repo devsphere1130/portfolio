@@ -1,9 +1,11 @@
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { frameDelta } from './animationTime';
 
 export const ParticleField = ({ mouse, reduced = false }) => {
   const pointsRef = useRef(null);
+  const time = useRef(0);
   const particleCount = reduced ? 80 : 180;
 
   const positions = useMemo(() => {
@@ -16,9 +18,10 @@ export const ParticleField = ({ mouse, reduced = false }) => {
     return values;
   }, [particleCount]);
 
-  useFrame((state) => {
+  useFrame((_, delta) => {
     if (!pointsRef.current || reduced) return;
-    pointsRef.current.rotation.y = state.clock.elapsedTime * 0.025 + mouse.current.x * 0.04;
+    time.current += frameDelta(delta);
+    pointsRef.current.rotation.y = time.current * 0.025 + mouse.current.x * 0.04;
     pointsRef.current.rotation.x = mouse.current.y * 0.025;
   });
 

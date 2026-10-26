@@ -1,3 +1,4 @@
+import json
 from unittest import mock
 
 from django.core import mail
@@ -61,6 +62,25 @@ class ContactInquiryTests(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn('Asha Patel', mail.outbox[0].subject)
         self.assertEqual(mail.outbox[0].to, ['owner@example.com'])
+
+    @override_settings(CONTACT_NOTIFY_WEBHOOK_URL='https://script.google.com/macros/s/x/exec', CONTACT_NOTIFY_WEBHOOK_SECRET='s3cret')
+    def test_notification_goes_through_the_https_relay_when_configured(self):
+        reply = mock.MagicMock()
+        reply.__enter__.return_value.read.return_value = b'ok'
+        with mock.patch('portfolio.views.urllib.request.urlopen', return_value=reply) as urlopen,                 mock.patch('portfolio.views.send_mail') as smtp:
+            self.assertEqual(self.client.post(self.url, VALID, format='json').status_code, 201)
+        sent = urlopen.call_args.args[0]
+        payload = json.loads(sent.data)
+        self.assertEqual(sent.full_url, 'https://script.google.com/macros/s/x/exec')
+        self.assertEqual((payload['secret'], payload['reply_to']), ('s3cret', VALID['email']))
+        self.assertIn('Asha Patel', payload['subject'])
+        smtp.assert_not_called()
+
+    @override_settings(CONTACT_NOTIFY_WEBHOOK_URL='https://script.google.com/macros/s/x/exec')
+    def test_relay_failure_still_saves_inquiry(self):
+        with mock.patch('portfolio.views.urllib.request.urlopen', side_effect=OSError('down')):
+            self.assertEqual(self.client.post(self.url, VALID, format='json').status_code, 201)
+        self.assertTrue(ContactInquiry.objects.exists())
 
     @override_settings(CONTACT_NOTIFY_EMAIL='owner@example.com')
     def test_mail_failure_still_saves_inquiry(self):

@@ -321,6 +321,12 @@ EMAIL_USE_TLS = env('EMAIL_USE_TLS', default=True, cast=bool)
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='webmaster@localhost')
 # Give up on a slow or blocked mail server quickly; the inquiry is already saved either way.
 EMAIL_TIMEOUT = env('EMAIL_TIMEOUT', default=10, cast=int)
+# Alternative to SMTP: an HTTPS endpoint that sends the email (e.g. Google Apps Script with your Gmail).
+# When set, it is used instead of SMTP. The secret must match the one in the script.
+CONTACT_NOTIFY_WEBHOOK_URL = env('CONTACT_NOTIFY_WEBHOOK_URL', default='')
+CONTACT_NOTIFY_WEBHOOK_SECRET = env('CONTACT_NOTIFY_WEBHOOK_SECRET', default='')
+if CONTACT_NOTIFY_WEBHOOK_URL and not CONTACT_NOTIFY_WEBHOOK_URL.startswith('https://'):
+    raise ImproperlyConfigured('CONTACT_NOTIFY_WEBHOOK_URL must be an https:// URL.')
 
 
 # ---------------------------------------------------------------------------

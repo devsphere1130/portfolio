@@ -25,17 +25,37 @@
   user-select: none;
   mix-blend-mode: screen;
   mask-image: linear-gradient(to bottom, #000 0%, #000 91%, transparent 100%);
-  /* Hidden until the canvas has drawn; Hero slides it in from the left. */
-  opacity: 0;
-  will-change: transform, opacity;
 }
 
 .hero-ribbon__scene {
+  position: relative;
   display: block;
   width: 100%;
   height: 100%;
   opacity: 0.92;
   mask-image: linear-gradient(to right, #000 0%, #000 38%, rgb(0 0 0 / 65%) 65%, transparent 93%);
+}
+
+/* Hero 3D layers: a still poster of the real first frame shows at once (WebGL needs ~0.5-1 s to start
+   and compile shaders), then the live canvas crossfades over it (Hero.jsx). Screen blending drops the
+   poster's black background, like the live ribbon canvas. */
+.hero-3d-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+  mix-blend-mode: screen;
+}
+/* The sphere sits in its own layer with nothing to screen against, so its poster has real transparency. */
+.hero-3d-poster--alpha {
+  mix-blend-mode: normal;
+}
+.hero-3d-live {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
 }
 
 .hero-ribbon__fallback {

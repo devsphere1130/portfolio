@@ -4,7 +4,9 @@ import { useContent } from '../content/hooks';
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
-  const { contact: contactDetails, socialLinks, site } = useContent();
+  const { contact: contactDetails, socialLinks, site, capabilities } = useContent();
+  // Same list, order and publish state as the home page's Services section (Admin → Capabilities).
+  const footerServices = capabilities.slice(0, 6);
 
   return (
     <footer className="bg-[#05070a]">
@@ -33,21 +35,23 @@ export const Footer = () => {
             </ul>
           </div>
 
-          <div>
-            <h4 className="mb-4 font-semibold text-white">Services</h4>
-            <ul className="space-y-0.5">
-              {['Web Apps', 'SaaS', 'Backend API', 'Modernization'].map((service) => (
-                <li key={service}>
-                  <a
-                    href="/#services"
-                    className="inline-block py-2 text-sm text-slate-400 transition-colors hover:text-white"
-                  >
-                    {service}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {footerServices.length > 0 && (
+            <div>
+              <h4 className="mb-4 font-semibold text-white">Services</h4>
+              <ul className="space-y-0.5">
+                {footerServices.map((service) => (
+                  <li key={service.id}>
+                    <a
+                      href="/#services"
+                      className="inline-block py-2 text-sm text-slate-400 transition-colors hover:text-white"
+                    >
+                      {service.title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div>
             <h4 className="mb-4 font-semibold text-white">Get in Touch</h4>
