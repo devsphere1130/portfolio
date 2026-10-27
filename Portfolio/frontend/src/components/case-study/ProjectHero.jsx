@@ -11,9 +11,8 @@ export const ProjectHero = ({ project, onExplore }) => {
   const reduced = useReducedMotion();
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
-  // Controlled background motion: the glow and image drift slowly as the hero scrolls away.
+  // Controlled background motion: the glow drifts slowly as the hero scrolls away.
   const glowY = useTransform(scrollYProgress, [0, 1], ['0%', reduced ? '0%' : '30%']);
-  const imageY = useTransform(scrollYProgress, [0, 1], reduced ? ['0%', '0%'] : ['-6%', '0%']);
 
   const rise = (i) => ({
     initial: { opacity: 0, y: reduced ? 0 : 26, filter: reduced ? 'none' : 'blur(8px)' },
@@ -30,6 +29,10 @@ export const ProjectHero = ({ project, onExplore }) => {
   ].filter(([, value]) => value);
   const labels = [project.category, project.status_label, project.is_featured && 'Featured'].filter(Boolean);
   const media = project.hero;
+  // Size the card to the image's own ratio so any screenshot fits exactly, with no letterboxing or cropping.
+  const mediaStyle = media?.width && media?.height
+    ? { aspectRatio: `${media.width} / ${media.height}`, '--cs-media-ratio': media.width / media.height }
+    : undefined;
 
   return (
     <section ref={ref} className="cs-hero" aria-labelledby="cs-title">
@@ -81,13 +84,14 @@ export const ProjectHero = ({ project, onExplore }) => {
         {media && (
           <motion.figure
             className="cs-hero-media"
+            style={mediaStyle}
             initial={{ opacity: 0, clipPath: reduced ? 'inset(0 0 0 0 round 16px)' : 'inset(8% 6% 8% 6% round 16px)' }}
             animate={{ opacity: 1, clipPath: 'inset(0% 0% 0% 0% round 16px)' }}
             transition={{ duration: reduced ? 0.2 : 1.2, delay: reduced ? 0 : 0.25, ease: EASE }}
           >
-            <motion.div style={{ y: imageY, height: '108%' }}>
+            <div className="cs-hero-media-inner">
               <ResponsiveImage image={media} eager sizes="(min-width: 1024px) 52vw, 100vw" fetchpriority="high" />
-            </motion.div>
+            </div>
           </motion.figure>
         )}
       </div>
