@@ -3,8 +3,8 @@ import { ProjectCard } from './ProjectCard';
 
 /** Placeholder with the same footprint as a ProjectCard, so nothing jumps when the real cards arrive. */
 const ProjectCardSkeleton = ({ flipped }) => (
-  <div aria-hidden="true" className={`grid gap-8 lg:grid-cols-2 lg:items-center ${flipped ? 'lg:[&>*:first-child]:order-2' : ''}`}>
-    <div className="aspect-[16/10] rounded-lg border border-white/10 bg-white/[0.03] motion-safe:animate-pulse lg:aspect-auto lg:min-h-[28rem]" />
+  <div aria-hidden="true" className={`grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)] gap-8 xl:grid-cols-2 xl:items-center ${flipped ? 'xl:[&>*:first-child]:order-2' : ''}`}>
+    <div className="aspect-[16/10] min-w-0 rounded-lg border border-white/10 bg-white/[0.03] motion-safe:animate-pulse" />
     <div className="glass-panel space-y-4 rounded-lg p-6 md:p-8">
       <div className="h-3 w-28 rounded bg-white/10 motion-safe:animate-pulse" />
       <div className="h-10 w-3/4 rounded bg-white/10 motion-safe:animate-pulse" />

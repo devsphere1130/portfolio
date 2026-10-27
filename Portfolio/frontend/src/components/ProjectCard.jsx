@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useContent } from '../content/hooks';
@@ -15,6 +15,11 @@ export const ProjectCard = ({ project, index }) => {
   const { whatsapp } = useContent();
   const imageRef = useRef(null);
   const contentRef = useRef(null);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [project.image]);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -64,21 +69,23 @@ export const ProjectCard = ({ project, index }) => {
       onMouseEnter={handleHover}
       onMouseLeave={handleHoverEnd}
       whileHover={{ y: -6 }}
-      className={`group relative grid cursor-pointer gap-8 lg:grid-cols-2 lg:items-center ${
-        index % 2 ? 'lg:[&_.project-image]:order-2' : ''
+      className={`group relative grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)] cursor-pointer gap-8 xl:grid-cols-2 xl:items-center ${
+        index % 2 ? 'xl:[&_.project-image]:order-2' : ''
       }`}
       data-cursor="view"
     >
       {/* The image is a link too (the text panel's backdrop-filter stops the title's overlay at that panel). */}
       <Link to={`/work/${project.slug}`} tabIndex={-1} aria-hidden="true"
-            className="project-image relative block aspect-[16/10] overflow-hidden rounded-lg border border-white/10 bg-slate-900 lg:aspect-auto lg:min-h-[28rem]">
-        {project.image ? (
+            className="project-image relative block min-w-0 aspect-[16/10] overflow-hidden rounded-lg border border-white/10 bg-[#050b12]">
+        {project.image && !imageFailed ? (
           <img
             ref={imageRef}
             src={project.image}
             alt={project.imageAlt || project.title}
             loading="lazy"
-            className="absolute inset-0 h-full w-full object-cover object-left-top opacity-80 saturate-90 transition-opacity duration-300 group-hover:opacity-100"
+            decoding="async"
+            onError={() => setImageFailed(true)}
+            className="absolute inset-0 h-full w-full object-contain opacity-90 saturate-90 transition-opacity duration-300 group-hover:opacity-100"
           />
         ) : (
           // No cover uploaded yet: an abstract branded panel (never a broken image or fake screenshot).
@@ -94,7 +101,7 @@ export const ProjectCard = ({ project, index }) => {
         </div>
       </Link>
 
-      <div ref={contentRef} className="glass-panel rounded-lg p-6 md:p-8">
+      <div ref={contentRef} className="glass-panel min-w-0 rounded-lg p-6 md:p-8">
         <div className="mb-5 flex flex-wrap items-center gap-3">
           <span className="text-xs font-bold uppercase tracking-[0.24em] text-sky-300">
             {project.category}
@@ -138,13 +145,13 @@ export const ProjectCard = ({ project, index }) => {
             </span>
           ))}
         </div>
-        <div className="relative z-10 mt-6 flex flex-wrap items-center gap-3">
+        <div className="relative z-10 mt-6 grid min-w-0 grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-center">
           <Link to={`/work/${project.slug}`} tabIndex={-1} aria-hidden="true"
-                className="inline-flex items-center gap-2 rounded-md border border-sky-300/30 px-4 py-2.5 text-sm font-semibold text-sky-100 transition-colors hover:border-sky-300/60 hover:bg-sky-300/10">
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-sky-300/30 px-4 py-2.5 text-sm font-semibold text-sky-100 transition-colors hover:border-sky-300/60 hover:bg-sky-300/10 sm:w-auto">
             View Case Study <ArrowRight size={16} />
           </Link>
           {whatsapp?.enabled && whatsapp.show_project_buttons && (
-            <WhatsAppLink phone={whatsapp.phone} className="wa-button"
+            <WhatsAppLink phone={whatsapp.phone} className="wa-button w-full min-w-0 sm:w-auto"
                           text={fillTemplate(whatsapp.project_message_template, { title: project.title, url: `${window.location.origin}/work/${project.slug}` })}>
               Ask about this project
             </WhatsAppLink>
