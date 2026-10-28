@@ -95,6 +95,17 @@ class PublishingTests(Base):
         self.assertEqual(public['Cache-Control'], 'public, no-cache')
         self.assertIn('stale-while-revalidate', public['Vercel-CDN-Cache-Control'])
 
+    def test_only_public_content_drops_vary_cookie(self):
+        # Vercel never caches `Vary: Cookie`; public content is the same for everyone, so it goes.
+        for client in (APIClient(), self.client):
+            public = client.get('/api/public/content/')
+            self.assertNotIn('cookie', public.get('Vary', '').lower())
+            self.assertIn('origin', public['Vary'].lower())
+        # Preview links (signed in or not) and dashboard APIs keep it, so they are never shared.
+        for client in (APIClient(), self.client):
+            self.assertIn('Cookie', client.get('/api/public/content/?preview=1')['Vary'])
+        self.assertIn('Cookie', self.client.get('/api/admin/projects/')['Vary'])
+
     def test_page_edits_stay_private_until_published(self):
         call_command('seed_content', stdout=BytesIO() and __import__('io').StringIO())
         home = Page.objects.get(slug='home')

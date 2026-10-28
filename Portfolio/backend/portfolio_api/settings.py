@@ -74,6 +74,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # serves /static/ (Django admin assets) in production
     'corsheaders.middleware.CorsMiddleware',
+    'cms.middleware.SharedCacheVaryMiddleware',  # above SessionMiddleware: drops Vary: Cookie from public content only
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
